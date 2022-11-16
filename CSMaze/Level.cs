@@ -5,6 +5,19 @@ using System.Numerics;
 
 namespace CSMaze
 {
+    /// <summary>
+    /// A class representing a single maze level. Contains a wall map
+    /// as a 2D array, with strings representing the north, east, south, and west
+    /// texture names for maze walls, and None representing occupy-able space.
+    /// The collision map is a 2D array of two bools representing whether the
+    /// player/monster should collide with the square respectively.
+    /// Also keeps track of the current player coordinates within the level.
+    /// Decorations are a dictionary of coordinates to a decoration texture name.
+    /// Monster parameters can be set to None if you do not wish the level
+    /// to have a monster.
+    /// This class will not automatically move or spawn the monster by itself,
+    /// however does provide the method required to do so.
+    /// </summary>
     public class Level
     {
         public enum MoveEvent
