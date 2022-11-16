@@ -579,7 +579,7 @@ namespace CSMaze
             foreach (KeyValuePair<string, string> decor in decorations)
             {
                 string[] splitKey = decor.Key.Split(',');
-                convertedDecorations[new Point(int.Parse(splitKey[0]), int.Parse(splitKey[1]))] = decor.Key;
+                convertedDecorations[new Point(int.Parse(splitKey[0]), int.Parse(splitKey[1]))] = decor.Value;
             }
 
             return new Level(new Point(dimensions[0], dimensions[1]), edge_wall_texture_name, wallMap, collisionMap, new Point(start_point[0], start_point[1]),
