@@ -20,19 +20,6 @@ namespace CSMaze
     /// </summary>
     public class Level
     {
-        public enum MoveEvent
-        {
-            Moved,
-            MovedGridDiagonally,
-            AlternateCoordChosen,
-            Pickup,
-            PickedUpKey,
-            PickedUpKeySensor,
-            PickedUpGun,
-            Won,
-            MonsterCaught
-        }
-
         public readonly struct GridSquareContents
         {
             public readonly (string, string, string, string)? Wall;
