@@ -3,6 +3,9 @@ using IniParser.Model;
 
 namespace CSMaze
 {
+    /// <summary>
+    /// Contains the loaded configuration options. Options will be reloaded from the file every time a new instance of this class is created.
+    /// </summary>
     public class Config
     {
         private readonly KeyDataCollection configOptions;
