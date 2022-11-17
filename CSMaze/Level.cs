@@ -22,9 +22,9 @@ namespace CSMaze
     {
         public readonly struct GridSquareContents
         {
-            public readonly (string, string, string, string)? Wall;
-            public readonly bool PlayerCollide;
-            public readonly bool MonsterCollide;
+            public (string, string, string, string)? Wall { get; }
+            public bool PlayerCollide { get; }
+            public bool MonsterCollide { get; }
 
             public GridSquareContents((string, string, string, string)? wall, bool playerCollide, bool monsterCollide)
             {
