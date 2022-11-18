@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using SDL2;
+using System.Drawing;
 using System.Numerics;
 
 namespace CSMaze
@@ -33,6 +34,14 @@ namespace CSMaze
         public static int[] ToArray(this Point point)
         {
             return new int[2] { point.X, point.Y };
+        }
+
+        /// <summary>
+        /// Convert a Color to an SDL_Color.
+        /// </summary>
+        public static SDL.SDL_Color ToSDL(this Color color, bool includeAlpha)
+        {
+            return new SDL.SDL_Color() { r = color.R, g = color.G, b = color.B, a = includeAlpha ? color.A : (byte)255 };
         }
     }
 }
