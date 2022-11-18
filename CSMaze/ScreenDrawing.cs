@@ -265,5 +265,20 @@ namespace CSMaze
                 _ = SDL.SDL_RenderCopyEx(screen, texture, IntPtr.Zero, ref spriteRect, 0, IntPtr.Zero, SDL.SDL_RendererFlip.SDL_FLIP_VERTICAL);
             }
         }
+
+        /// <summary>
+        /// Draw two rectangles stacked on top of each other horizontally on the screen.
+        /// </summary>
+        public static void DrawSolidBackground(IntPtr screen, Config cfg)
+        {
+            int displayColumnWidth = cfg.ViewportWidth / cfg.DisplayColumns;
+            int filledScreenWidth = displayColumnWidth * cfg.DisplayColumns;
+            _ = SDL.SDL_SetRenderDrawColor(screen, Blue.R, Blue.G, Blue.B, 255);
+            SDL.SDL_Rect spriteRect = new() { x = 0, y = 0, w = filledScreenWidth, h = cfg.ViewportHeight / 2};
+            _ = SDL.SDL_RenderFillRect(screen, ref spriteRect);
+            _ = SDL.SDL_SetRenderDrawColor(screen, DarkGrey.R, DarkGrey.G, DarkGrey.B, 255);
+            spriteRect.y = cfg.ViewportHeight / 2;
+            _ = SDL.SDL_RenderFillRect(screen, ref spriteRect);
+        }
     }
 }
