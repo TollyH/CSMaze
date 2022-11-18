@@ -546,5 +546,53 @@ namespace CSMaze
             SDL.SDL_FreeSurface(resetPromptSfc);
             SDL.SDL_DestroyTexture(resetPrompt);
         }
+
+        /// <summary>
+        /// Draw the third person gun on the screen with a crosshair in the centre.
+        /// </summary>
+        public static void DrawGun(IntPtr screen, Config cfg, IntPtr gunTexture)
+        {
+            _ = SDL.SDL_RenderCopy(screen, gunTexture, IntPtr.Zero, IntPtr.Zero);
+            _ = SDL_gfx.filledCircleRGBA(screen, (short)(cfg.ViewportWidth / 2), (short)(cfg.ViewportHeight / 2), 5, Black.R, Black.G, Black.B, 255);
+            _ = SDL_gfx.filledCircleRGBA(screen, (short)(cfg.ViewportWidth / 2), (short)(cfg.ViewportHeight / 2), 3, White.R, White.G, White.B, 255);
+        }
+
+        /// <summary>
+        /// Draw the number of hits the player can take before they die in the bottom left corner.
+        /// </summary>
+        public static void DrawRemainingHits(IntPtr screen, Config cfg, int hits)
+        {
+            IntPtr remainingTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, hits.ToString(), Red.ToSDL(false));
+            IntPtr remainingText = SDL.SDL_CreateTextureFromSurface(screen, remainingTextSfc);
+            _ = DrawTextureAtPosition(screen, remainingText, new Point(10, cfg.ViewportHeight - 40));
+            SDL.SDL_FreeSurface(remainingTextSfc);
+            SDL.SDL_DestroyTexture(remainingText);
+        }
+
+        /// <summary>
+        /// Draw the number of kills the player has in the bottom right corner.
+        /// </summary>
+        public static void DrawKillCount(IntPtr screen, Config cfg, int kills)
+        {
+            IntPtr killsTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, kills.ToString(), Red.ToSDL(false));
+            IntPtr killsText = SDL.SDL_CreateTextureFromSurface(screen, killsTextSfc);
+            _ = SDL.SDL_QueryTexture(killsText, out _, out _, out int w, out int h);
+            SDL.SDL_Rect textureRect = new() { x = cfg.ViewportWidth - w - 15, y = cfg.ViewportHeight - 40, w = w, h = h };
+            _ = SDL.SDL_RenderCopy(screen, killsText, IntPtr.Zero, ref textureRect);
+            SDL.SDL_FreeSurface(killsTextSfc);
+            SDL.SDL_DestroyTexture(killsText);
+        }
+
+        /// <summary>
+        /// Draw the number of deaths the player has in the bottom left corner.
+        /// </summary>
+        public static void DrawDeathCount(IntPtr screen, Config cfg, int deaths)
+        {
+            IntPtr deathsTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, deaths.ToString(), Red.ToSDL(false));
+            IntPtr deathsText = SDL.SDL_CreateTextureFromSurface(screen, deathsTextSfc);
+            _ = DrawTextureAtPosition(screen, deathsText, new Point(10, cfg.ViewportHeight - 90));
+            SDL.SDL_FreeSurface(deathsTextSfc);
+            SDL.SDL_DestroyTexture(deathsText);
+        }
     }
 }
