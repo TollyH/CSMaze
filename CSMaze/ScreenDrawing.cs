@@ -78,7 +78,8 @@ namespace CSMaze
             }
             if (timeOnScreen >= 2.5)
             {
-                IntPtr moveScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Move Score: {moveScore * Math.Min(1.0, (timeOnScreen - 2.5) / 2):F1}", DarkRed.ToSDL(false));
+                IntPtr moveScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Move Score: {moveScore * Math.Min(1.0, (timeOnScreen - 2.5) / 2):F1}",
+                    DarkRed.ToSDL(false));
                 IntPtr moveScoreText = SDL.SDL_CreateTextureFromSurface(screen, moveScoreTextSfc);
                 if (victorySoundsPlayed[currentLevel] == 2)
                 {
@@ -368,6 +369,119 @@ namespace CSMaze
             // Exact player position
             _ = SDL_gfx.filledCircleRGBA(screen, (short)playerScreenX, (short)playerScreenY, (short)(Math.Min(tileWidth, tileHeight) / 8),
                 DarkGreen.R, DarkGreen.G, DarkGreen.B, 255);
+        }
+
+        /// <summary>
+        /// Draw time, move count, and key counts to the bottom left-hand corner of
+        /// the screen with a transparent black background if the monster hasn't
+        /// spawned or a transparent red one if it has. Also draw some control prompts
+        /// to the top left showing timeouts for wall placement, compass and sensor.
+        /// </summary>
+        public static void DrawStats(IntPtr screen, Config cfg, bool monsterSpawned, float timeScore, float moveScore, int remainingKeys, int startingKeys,
+            Dictionary<HUDIcon, IntPtr> hudIcons, IntPtr blankIcon, float keySensorTime, float compassTime, bool compassBurned, float? playerWallTime,
+            float wallPlaceCooldown, float currentLevelTime, bool hasGun, bool isCoop)
+        {
+            Color backgroundColour = monsterSpawned ? Red : Black;
+            _ = SDL.SDL_SetRenderDrawColor(screen, backgroundColour.R, backgroundColour.G, backgroundColour.B, 127);
+            _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            SDL.SDL_Rect bottomBgRect = new() { x = 0, y = cfg.ViewportHeight - 110, w = 225, h = 110 };
+            _ = SDL.SDL_RenderFillRect(screen, ref bottomBgRect);
+
+            IntPtr timeScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Time: {timeScore:F1}", White.ToSDL(false));
+            IntPtr timeScoreText = SDL.SDL_CreateTextureFromSurface(screen, timeScoreTextSfc);
+            IntPtr moveScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Moves: {moveScore:F1}", White.ToSDL(false));
+            IntPtr moveScoreText = SDL.SDL_CreateTextureFromSurface(screen, moveScoreTextSfc);
+            IntPtr keysTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Keys: {remainingKeys}/{startingKeys}", White.ToSDL(false));
+            IntPtr keysText = SDL.SDL_CreateTextureFromSurface(screen, keysTextSfc);
+            _ = DrawTextureAtPosition(screen, timeScoreText, new Point(10, cfg.ViewportHeight - 100));
+            _ = DrawTextureAtPosition(screen, moveScoreText, new Point(10, cfg.ViewportHeight - 70));
+            _ = DrawTextureAtPosition(screen, keysText, new Point(10, cfg.ViewportHeight - 40));
+            SDL.SDL_FreeSurface(timeScoreTextSfc);
+            SDL.SDL_DestroyTexture(timeScoreText);
+            SDL.SDL_FreeSurface(moveScoreTextSfc);
+            SDL.SDL_DestroyTexture(moveScoreText);
+            SDL.SDL_FreeSurface(keysTextSfc);
+            SDL.SDL_DestroyTexture(keysText);
+
+            SDL.SDL_Rect topBgRect = new() { x = 0, y = 0, w = isCoop ? 130 : 260, h = 75 };
+            _ = SDL.SDL_RenderFillRect(screen, ref topBgRect);
+
+            _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Map, blankIcon), new Point(5, 5));
+            IntPtr spaceHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "‿", White.ToSDL(false));
+            IntPtr spaceHintText = SDL.SDL_CreateTextureFromSurface(screen, spaceHintTextSfc);
+            _ = DrawTextureAtPosition(screen, spaceHintText, new Point(11, 36));
+            SDL.SDL_FreeSurface(spaceHintTextSfc);
+            SDL.SDL_DestroyTexture(spaceHintText);
+            if (keySensorTime > 0)
+            {
+                int topMargin = (int)(32 * (1 - (keySensorTime / cfg.KeySensorTime)));
+                SDL.SDL_Rect keySensorSrcRect = new() { x = 0, y = 0, w = 32, h = 32 - topMargin };
+                SDL.SDL_Rect keySensorDstRect = new() { x = 5, y = 5, w = 32, h = 32 - topMargin };
+                _ = SDL.SDL_RenderCopy(screen, hudIcons.GetValueIfExists(HUDIcon.KeySensor, blankIcon), ref keySensorSrcRect, ref keySensorDstRect);
+            }
+
+            Color colour;
+
+            if (!isCoop)
+            {
+                _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Flag, blankIcon), new Point(47, 5));
+                IntPtr flagHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "F", White.ToSDL(false));
+                IntPtr flagHintText = SDL.SDL_CreateTextureFromSurface(screen, flagHintTextSfc);
+                _ = DrawTextureAtPosition(screen, flagHintText, new Point(54, 40));
+                SDL.SDL_FreeSurface(flagHintTextSfc);
+                SDL.SDL_DestroyTexture(flagHintText);
+
+                colour = playerWallTime is null ? DarkGreen : Red;
+                _ = SDL_gfx.filledCircleRGBA(screen, 106, 21, (short)(16 * (playerWallTime is null
+                    ? (1 - (wallPlaceCooldown / cfg.PlayerWallCooldown))
+                    : (1 - ((currentLevelTime - playerWallTime) / cfg.PlayerWallTime)))),
+                    colour.R, colour.G, colour.B, 255);
+
+                _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.PlaceWall, blankIcon), new Point(59, 5));
+                IntPtr placeHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "Q", White.ToSDL(false));
+                IntPtr placeHintText = SDL.SDL_CreateTextureFromSurface(screen, placeHintTextSfc);
+                _ = DrawTextureAtPosition(screen, placeHintText, new Point(96, 40));
+                SDL.SDL_FreeSurface(placeHintTextSfc);
+                SDL.SDL_DestroyTexture(placeHintText);
+            }
+
+            colour = compassBurned ? Red : DarkGreen;
+            _ = SDL_gfx.filledCircleRGBA(screen, (short)(isCoop ? 64 : 148), 21, (short)(15 * (compassTime / cfg.CompassTime)), colour.R, colour.G, colour.B, 255);
+            _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Compass, blankIcon), new Point(isCoop ? 47 : 131, 5));
+            IntPtr compassHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "C", White.ToSDL(false));
+            IntPtr compassHintText = SDL.SDL_CreateTextureFromSurface(screen, compassHintTextSfc);
+            _ = DrawTextureAtPosition(screen, compassHintText, new Point(isCoop ? 54 : 139, 40));
+            SDL.SDL_FreeSurface(compassHintTextSfc);
+            SDL.SDL_DestroyTexture(compassHintText);
+
+            if (!isCoop)
+            {
+                _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Pause, blankIcon), new Point(173, 5));
+                IntPtr pauseHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "R", White.ToSDL(false));
+                IntPtr pauseHintText = SDL.SDL_CreateTextureFromSurface(screen, pauseHintTextSfc);
+                _ = DrawTextureAtPosition(screen, pauseHintText, new Point(181, 40));
+                SDL.SDL_FreeSurface(pauseHintTextSfc);
+                SDL.SDL_DestroyTexture(pauseHintText);
+            }
+
+            _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Stats, blankIcon), new Point(isCoop ? 89 : 215, 5));
+            IntPtr statsHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "E", White.ToSDL(false));
+            IntPtr statsHintText = SDL.SDL_CreateTextureFromSurface(screen, statsHintTextSfc);
+            _ = DrawTextureAtPosition(screen, statsHintText, new Point(isCoop ? 96 : 223, 40));
+            SDL.SDL_FreeSurface(statsHintTextSfc);
+            SDL.SDL_DestroyTexture(statsHintText);
+
+            if (hasGun)
+            {
+                SDL.SDL_Rect gunBgRect = new() { x = cfg.ViewportWidth - 45, y = 0, w = 45, h = 75 };
+                _ = SDL.SDL_RenderFillRect(screen, ref gunBgRect);
+                _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Gun, blankIcon), new Point(cfg.ViewportWidth - 37, 5));
+                IntPtr gunHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "T", White.ToSDL(false));
+                IntPtr gunHintText = SDL.SDL_CreateTextureFromSurface(screen, gunHintTextSfc);
+                _ = DrawTextureAtPosition(screen, gunHintText, new Point(cfg.ViewportWidth - 29, 40));
+                SDL.SDL_FreeSurface(gunHintTextSfc);
+                SDL.SDL_DestroyTexture(gunHintText);
+            }
         }
     }
 }

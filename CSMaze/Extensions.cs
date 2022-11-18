@@ -53,5 +53,10 @@ namespace CSMaze
         {
             return new SDL.SDL_Color() { r = color.R, g = color.G, b = color.B, a = includeAlpha ? color.A : (byte)255 };
         }
+
+        public static TValue GetValueIfExists<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue fallback) where TKey: notnull
+        {
+            return dictionary.ContainsKey(key) ? dictionary[key] : fallback;
+        }
     }
 }

@@ -35,4 +35,16 @@
         South,
         West
     }
+
+    public enum HUDIcon
+    {
+        Compass,
+        Flag,
+        Map,
+        Pause,
+        PlaceWall,
+        Stats,
+        KeySensor,
+        Gun
+    }
 }
