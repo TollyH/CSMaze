@@ -527,5 +527,24 @@ namespace CSMaze
             _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
         }
+
+        /// <summary>
+        /// Draw a transparent overlay over a given background asking the user if they are sure that they want to reset the level.
+        /// </summary>
+        public static void DrawResetPrompt(IntPtr screen, Config cfg, IntPtr background)
+        {
+            _ = SDL.SDL_RenderCopy(screen, background, IntPtr.Zero, IntPtr.Zero);
+            _ = SDL.SDL_SetRenderDrawColor(screen, LightBlue.R, LightBlue.G, LightBlue.B, 195);
+            _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
+
+            IntPtr resetPromptSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "Press 'y' to reset or 'n' to cancel", DarkGrey.ToSDL(false));
+            IntPtr resetPrompt = SDL.SDL_CreateTextureFromSurface(screen, resetPromptSfc);
+            _ = SDL.SDL_QueryTexture(resetPrompt, out _, out _, out int w, out int h);
+            SDL.SDL_Rect textureRect = new() { x = (cfg.ViewportWidth / 2) - (w / 2), y = (cfg.ViewportHeight / 2) - (h / 2), w = w, h = h };
+            _ = SDL.SDL_RenderCopy(screen, resetPrompt, IntPtr.Zero, ref textureRect);
+            SDL.SDL_FreeSurface(resetPromptSfc);
+            SDL.SDL_DestroyTexture(resetPrompt);
+        }
     }
 }
