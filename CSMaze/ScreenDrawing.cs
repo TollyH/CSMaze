@@ -239,7 +239,7 @@ namespace CSMaze
             Vector2 transformation = new(inverseCamera * ((facing.Y * relativePos.X) - (facing.X * relativePos.Y)),
                 inverseCamera * ((-cameraPlane.Y * relativePos.X) + (cameraPlane.X * relativePos.Y)));
             int screenXPos = (int)(filledScreenWidth / 2 * (1 + (transformation.X / transformation.Y)));
-            if (screenXPos > filledScreenWidth + MazeGame.TextureWidth / 2 || screenXPos < -MazeGame.TextureWidth / 2)
+            if (screenXPos > filledScreenWidth + (MazeGame.TextureWidth / 2) || screenXPos < -MazeGame.TextureWidth / 2)
             {
                 // Sprite is fully off screen - don't render it
                 return;
