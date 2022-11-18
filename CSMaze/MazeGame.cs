@@ -7,6 +7,9 @@
     /// </summary>
     public class MazeGame
     {
+        public static readonly int TextureWidth = 128;
+        public static readonly int TextureHeight = 128;
+
         public static readonly Random RNG = new();
     }
 }

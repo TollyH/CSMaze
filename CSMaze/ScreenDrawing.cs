@@ -171,5 +171,67 @@ namespace CSMaze
             SDL.SDL_FreeSurface(escapePromptSfc);
             SDL.SDL_DestroyTexture(escapePrompt);
         }
+
+        /// <summary>
+        /// Draw a single black/grey column to the screen. Designed for if textures are disabled or a texture wasn't found for the current level.
+        /// </summary>
+        public static void DrawUntexturedColumn(IntPtr screen, Config cfg, int index, bool sideWasNs, int columnHeight)
+        {
+            int displayColumnWidth = cfg.ViewportWidth / cfg.DisplayColumns;
+            columnHeight = Math.Min(columnHeight, cfg.ViewportHeight);
+            Color colour = sideWasNs ? WallGreyLight : WallGreyDark;
+            // The location on the screen to start drawing the column
+            int drawX = displayColumnWidth * index;
+            int drawY = Math.Max(0, (-columnHeight / 2) + (cfg.ViewportHeight / 2));
+            _ = SDL.SDL_SetRenderDrawColor(screen, colour.R, colour.G, colour.B, 255);
+            SDL.SDL_Rect columnRect = new() { x = drawX, y = drawY, w = displayColumnWidth, h = columnHeight };
+            _ = SDL.SDL_RenderFillRect(screen, ref columnRect);
+            if (cfg.FogStrength > 0)
+            {
+                _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, (byte)(255 / (columnHeight / cfg.ViewportHeight * cfg.FogStrength)));
+                _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                _ = SDL.SDL_RenderFillRect(screen, ref columnRect);
+            }
+        }
+
+        /// <summary>
+        /// Takes a single column of pixels from the given texture and scales it to the required height before drawing it to the screen.
+        /// </summary>
+        public static void DrawTexturedColumn(IntPtr screen, Config cfg, Vector2 coord, bool sideWasNs, int columnHeight, int index, Vector2 facing,
+            IntPtr texture, Vector2 cameraPlane)
+        {
+            int displayColumnWidth = cfg.ViewportWidth / cfg.DisplayColumns;
+            // Determines how far along the texture we need to go by keeping only the decimal part of the collision coordinate.
+            float positionAlongWall = (sideWasNs ? coord.X : coord.Y) % 1;
+            int textureX = (int)(positionAlongWall * MazeGame.TextureWidth);
+            int cameraX = (2 * index / cfg.DisplayColumns) - 1;
+            Vector2 castDirection = facing + (cameraPlane * cameraX);
+            if ((!sideWasNs && castDirection.X < 0) || (sideWasNs && castDirection.Y > 0))
+            {
+                textureX = MazeGame.TextureWidth - textureX - 1;
+            }
+            // The location on the screen to start drawing the column
+            int drawX = displayColumnWidth * index;
+            int drawY = (-columnHeight / 2) + (cfg.ViewportHeight / 2);
+            SDL.SDL_Rect srcRect = new() { x = textureX, y = 0, w = 1, h = MazeGame.TextureHeight };
+            SDL.SDL_Rect dstRect = new() { x = drawX, y = drawY, w = displayColumnWidth, h = columnHeight };
+            _ = SDL.SDL_RenderCopy(screen, texture, ref srcRect, ref dstRect);
+            if (cfg.DrawReflections)
+            {
+                dstRect.y += columnHeight;
+                _ = SDL.SDL_RenderCopyEx(screen, texture, ref srcRect, ref dstRect, 0, IntPtr.Zero, SDL.SDL_RendererFlip.SDL_FLIP_VERTICAL);
+            }
+            if (cfg.FogStrength > 0)
+            {
+                _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, (byte)(255 / (columnHeight / cfg.ViewportHeight * cfg.FogStrength)));
+                _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                if (cfg.DrawReflections)
+                {
+                    dstRect.y -= columnHeight;
+                    dstRect.h += columnHeight;
+                }
+                _ = SDL.SDL_RenderFillRect(screen, ref dstRect);
+            }
+        }
     }
 }
