@@ -218,20 +218,10 @@ namespace CSMaze
             SDL.SDL_Rect srcRect = new() { x = textureX, y = 0, w = 1, h = MazeGame.TextureHeight };
             SDL.SDL_Rect dstRect = new() { x = drawX, y = drawY, w = displayColumnWidth, h = columnHeight };
             _ = SDL.SDL_RenderCopy(screen, texture, ref srcRect, ref dstRect);
-            if (cfg.DrawReflections)
-            {
-                dstRect.y += columnHeight;
-                _ = SDL.SDL_RenderCopyEx(screen, texture, ref srcRect, ref dstRect, 0, IntPtr.Zero, SDL.SDL_RendererFlip.SDL_FLIP_VERTICAL);
-            }
             if (cfg.FogStrength > 0)
             {
                 _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, (byte)(255 / (columnHeight / cfg.ViewportHeight * cfg.FogStrength)));
                 _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
-                if (cfg.DrawReflections)
-                {
-                    dstRect.y -= columnHeight;
-                    dstRect.h += columnHeight;
-                }
                 _ = SDL.SDL_RenderFillRect(screen, ref dstRect);
             }
         }
@@ -260,11 +250,6 @@ namespace CSMaze
                 x = screenXPos - (spriteSize.Width / 2), y = (cfg.ViewportHeight / 2) - (spriteSize.Height / 2), w = spriteSize.Width, h = spriteSize.Height
             };
             _ = SDL.SDL_RenderCopy(screen, texture, IntPtr.Zero, ref spriteRect);
-            if (cfg.DrawReflections)
-            {
-                spriteRect.y += spriteSize.Height / 2;
-                _ = SDL.SDL_RenderCopyEx(screen, texture, IntPtr.Zero, ref spriteRect, 0, IntPtr.Zero, SDL.SDL_RendererFlip.SDL_FLIP_VERTICAL);
-            }
         }
 
         /// <summary>
