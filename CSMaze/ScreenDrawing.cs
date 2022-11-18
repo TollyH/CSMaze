@@ -286,5 +286,88 @@ namespace CSMaze
                 _ = SDL.SDL_RenderCopy(screen, skyTexture, ref srcRect, ref dstRect);
             }
         }
+
+        /// <summary>
+        /// Draw a 2D map representing the current level. This will cover the screen unless <see cref="Config.EnableCheatMap"/> is true.
+        /// </summary>
+        public static void DrawMap(IntPtr screen, Config cfg, Level currentLevel, bool displayRays, IReadOnlyList<Vector2> rayEndCoords,
+            Vector2 facing, bool hasKeySensor, Point? playerWall)
+        {
+            int tileWidth = cfg.ViewportWidth / currentLevel.Dimensions.Width;
+            int tileHeight = cfg.ViewportHeight / currentLevel.Dimensions.Height;
+            int xOffset = cfg.EnableCheatMap ? cfg.ViewportWidth : 0;
+            for (int y = 0; y < currentLevel.Dimensions.Height; y++)
+            {
+                for (int x = 0; x < currentLevel.Dimensions.Width; x++)
+                {
+                    Point pnt = new(x, y);
+                    Color colour;
+                    if (currentLevel.PlayerCoords.Floor() == pnt)
+                    {
+                        colour = Blue;
+                    }
+                    else if (currentLevel.MonsterCoords == pnt && cfg.EnableCheatMap)
+                    {
+                        colour = DarkRed;
+                    }
+                    else if (playerWall is not null && playerWall == pnt)
+                    {
+                        colour = Purple;
+                    }
+                    else if (currentLevel.ExitKeys.Contains(pnt) && (cfg.EnableCheatMap || hasKeySensor))
+                    {
+                        colour = Gold;
+                    }
+                    else if (currentLevel.KeySensors.Contains(pnt) && cfg.EnableCheatMap)
+                    {
+                        colour = DarkGold;
+                    }
+                    else if (currentLevel.Guns.Contains(pnt) && cfg.EnableCheatMap)
+                    {
+                        colour = Grey;
+                    }
+                    else if (currentLevel.MonsterStart == pnt)
+                    {
+                        colour = DarkGreen;
+                    }
+                    else if (currentLevel.PlayerFlags.Contains(pnt))
+                    {
+                        colour = LightBlue;
+                    }
+                    else if (currentLevel.StartPoint == pnt)
+                    {
+                        colour = Red;
+                    }
+                    else if (currentLevel.EndPoint == pnt && cfg.EnableCheatMap)
+                    {
+                        colour = Green;
+                    }
+                    else
+                    {
+                        colour = currentLevel[pnt].Wall is null ? White : Black;
+                    }
+                    _ = SDL.SDL_SetRenderDrawColor(screen, colour.R, colour.G, colour.B, 255);
+                    SDL.SDL_Rect squareRect = new() { x = (tileWidth * x) + xOffset, y = tileHeight * y, w = tileWidth, h = tileHeight };
+                    _ = SDL.SDL_RenderFillRect(screen, ref squareRect);
+                }
+            }
+            float playerScreenX = (currentLevel.PlayerCoords.X * tileWidth) + xOffset;
+            float playerScreenY = currentLevel.PlayerCoords.Y * tileHeight;
+            // Raycast rays
+            if (displayRays && cfg.EnableCheatMap)
+            {
+                _ = SDL.SDL_SetRenderDrawColor(screen, DarkGold.R, DarkGold.G, DarkGold.B, 255);
+                foreach (Vector2 rayEnd in rayEndCoords)
+                {
+                    _ = SDL.SDL_RenderDrawLineF(screen, playerScreenX, playerScreenY, (rayEnd.X * tileWidth) + xOffset, rayEnd.Y * tileHeight);
+                }
+            }
+            // Player direction
+            _ = SDL_gfx.thickLineRGBA(screen, (short)playerScreenX, (short)playerScreenY, (short)(playerScreenX + (facing.X * Math.Min(tileWidth, tileHeight) / 2)),
+                (short)(playerScreenY + (facing.Y * Math.Min(tileWidth, tileHeight) / 2)), 3, DarkRed.R, DarkRed.G, DarkRed.B, 255);
+            // Exact player position
+            _ = SDL_gfx.filledCircleRGBA(screen, (short)playerScreenX, (short)playerScreenY, (short)(Math.Min(tileWidth, tileHeight) / 8),
+                DarkGreen.R, DarkGreen.G, DarkGreen.B, 255);
+        }
     }
 }
