@@ -234,5 +234,36 @@ namespace CSMaze
                 _ = SDL.SDL_RenderFillRect(screen, ref dstRect);
             }
         }
+
+        /// <summary>
+        /// Draw a transformed 2D sprite onto the screen. Provides the illusion of an object being drawn in 3D space by scaling up and down.
+        /// </summary>
+        public static void DrawSprite(IntPtr screen, Config cfg, Vector2 coord, Vector2 playerCoords, Vector2 cameraPlane, Vector2 facing, IntPtr texture)
+        {
+            int displayColumnWidth = cfg.ViewportWidth / cfg.DisplayColumns;
+            int filledScreenWidth = displayColumnWidth * cfg.DisplayColumns;
+            Vector2 relativePos = coord - playerCoords;
+            float inverseCamera = 1 / ((cameraPlane.X * facing.Y) - (facing.X * cameraPlane.Y));
+            Vector2 transformation = new(inverseCamera * ((facing.Y * relativePos.X) - (facing.X * relativePos.Y)),
+                inverseCamera * ((-cameraPlane.Y * relativePos.X) + (cameraPlane.X * relativePos.Y)));
+            int screenXPos = (int)(filledScreenWidth / 2 * (1 + (transformation.X / transformation.Y)));
+            if (screenXPos > filledScreenWidth + MazeGame.TextureWidth / 2 || screenXPos < -MazeGame.TextureWidth / 2)
+            {
+                // Sprite is fully off screen - don't render it
+                return;
+            }
+            Size spriteSize = new((int)Math.Abs(filledScreenWidth / transformation.Y), (int)Math.Abs(cfg.ViewportHeight / transformation.Y));
+            // TODO: Sprite fog
+            SDL.SDL_Rect spriteRect = new()
+            {
+                x = screenXPos - (spriteSize.Width / 2), y = (cfg.ViewportHeight / 2) - (spriteSize.Height / 2), w = spriteSize.Width, h = spriteSize.Height
+            };
+            _ = SDL.SDL_RenderCopy(screen, texture, IntPtr.Zero, ref spriteRect);
+            if (cfg.DrawReflections)
+            {
+                spriteRect.y += spriteSize.Height / 2;
+                _ = SDL.SDL_RenderCopyEx(screen, texture, IntPtr.Zero, ref spriteRect, 0, IntPtr.Zero, SDL.SDL_RendererFlip.SDL_FLIP_VERTICAL);
+            }
+        }
     }
 }
