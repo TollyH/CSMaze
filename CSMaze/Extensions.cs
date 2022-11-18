@@ -37,6 +37,16 @@ namespace CSMaze
         }
 
         /// <summary>
+        /// Convert a Size with integer values to an array.
+        /// </summary>
+        /// <param name="size">The Size to convert.</param>
+        /// <returns>An array with the Width and Height coordinates of the Size.</returns>
+        public static int[] ToArray(this Size size)
+        {
+            return new int[2] { size.Width, size.Height };
+        }
+
+        /// <summary>
         /// Convert a Color to an SDL_Color.
         /// </summary>
         public static SDL.SDL_Color ToSDL(this Color color, bool includeAlpha)

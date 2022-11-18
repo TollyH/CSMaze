@@ -34,7 +34,7 @@ namespace CSMaze
             }
         }
 
-        public Point Dimensions { get; private set; }
+        public Size Dimensions { get; private set; }
         public string EdgeWallTextureName { get; private set; }
         public (string, string, string, string)?[,] WallMap { get; private set; }
         public (bool, bool)[,] CollisionMap { get; private set; }
@@ -58,7 +58,7 @@ namespace CSMaze
         // Used to prevent the monster from backtracking
         private Point? lastMonsterPosition = null;
 
-        public Level(Point dimensions, string edgeWallTextureName, (string, string, string, string)?[,] wallMap, (bool, bool)[,] collisionMap,
+        public Level(Size dimensions, string edgeWallTextureName, (string, string, string, string)?[,] wallMap, (bool, bool)[,] collisionMap,
             Point startPoint, Point endPoint, HashSet<Point> exitKeys, HashSet<Point> keySensors, HashSet<Point> guns, Dictionary<Point, string> decorations,
             Point? monsterStart, float? monsterWait)
         {
@@ -142,11 +142,11 @@ namespace CSMaze
         public JsonLevel GetJsonLevel()
         {
             List<string[]?[]> wallMap = new();
-            for (int y = 0; y < Dimensions.Y; y++)
+            for (int y = 0; y < Dimensions.Height; y++)
             {
-                wallMap.Add(new string[]?[Dimensions.X]);
+                wallMap.Add(new string[]?[Dimensions.Width]);
                 string[]?[] last = wallMap[^1];
-                for (int x = 0; x < Dimensions.X; x++)
+                for (int x = 0; x < Dimensions.Width; x++)
                 {
                     (string, string, string, string)? value = WallMap[x, y];
                     last[x] = value is null ? null : new string[4] { value.Value.Item1, value.Value.Item2, value.Value.Item3, value.Value.Item4 };
@@ -154,11 +154,11 @@ namespace CSMaze
             }
 
             List<bool[][]> collisionMap = new();
-            for (int y = 0; y < Dimensions.Y; y++)
+            for (int y = 0; y < Dimensions.Height; y++)
             {
-                collisionMap.Add(new bool[Dimensions.X][]);
+                collisionMap.Add(new bool[Dimensions.Width][]);
                 bool[][] last = collisionMap[^1];
-                for (int x = 0; x < Dimensions.X; x++)
+                for (int x = 0; x < Dimensions.Width; x++)
                 {
                     (bool, bool) value = CollisionMap[x, y];
                     last[x] = new bool[2] { value.Item1, value.Item2 };
@@ -268,17 +268,17 @@ namespace CSMaze
 
         public bool IsCoordInBounds(Vector2 coord)
         {
-            return 0 <= coord.X && coord.X < Dimensions.X && 0 <= coord.Y && coord.Y < Dimensions.Y;
+            return 0 <= coord.X && coord.X < Dimensions.Width && 0 <= coord.Y && coord.Y < Dimensions.Height;
         }
 
         public bool IsCoordInBounds(Point coord)
         {
-            return 0 <= coord.X && coord.X < Dimensions.X && 0 <= coord.Y && coord.Y < Dimensions.Y;
+            return 0 <= coord.X && coord.X < Dimensions.Width && 0 <= coord.Y && coord.Y < Dimensions.Height;
         }
 
         public bool IsCoordInBounds(int x, int y)
         {
-            return 0 <= x && x < Dimensions.X && 0 <= y && y < Dimensions.Y;
+            return 0 <= x && x < Dimensions.Width && 0 <= y && y < Dimensions.Height;
         }
 
         /// <summary>
@@ -495,7 +495,7 @@ namespace CSMaze
             Vector2? newCoord = null;
             while (newCoord is null || this[newCoord.Value].PlayerCollide)
             {
-                newCoord = new Vector2(MazeGame.RNG.Next(Dimensions.X) + 0.5f, MazeGame.RNG.Next(Dimensions.Y) + 0.5f);
+                newCoord = new Vector2(MazeGame.RNG.Next(Dimensions.Width) + 0.5f, MazeGame.RNG.Next(Dimensions.Height) + 0.5f);
             }
             _ = MovePlayer(newCoord.Value, false, false, false, true);
         }
@@ -582,7 +582,7 @@ namespace CSMaze
                 convertedDecorations[new Point(int.Parse(splitKey[0]), int.Parse(splitKey[1]))] = decor.Value;
             }
 
-            return new Level(new Point(dimensions[0], dimensions[1]), edge_wall_texture_name, wallMap, collisionMap, new Point(start_point[0], start_point[1]),
+            return new Level(new Size(dimensions[0], dimensions[1]), edge_wall_texture_name, wallMap, collisionMap, new Point(start_point[0], start_point[1]),
                 new Point(end_point[0], end_point[1]), exitKeys, keySensors, convertedGuns, convertedDecorations,
                 monster_start is null ? null : new Point(monster_start[0], monster_start[1]), monster_wait);
         }
