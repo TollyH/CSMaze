@@ -594,5 +594,86 @@ namespace CSMaze
             SDL.SDL_FreeSurface(deathsTextSfc);
             SDL.SDL_DestroyTexture(deathsText);
         }
+
+        /// <summary>
+        /// Draw an ordered list of players in the server, and the kills and deaths they currently have.
+        /// </summary>
+        public static void DrawLeaderboard(IntPtr screen, Config cfg, IReadOnlyList<NetData.Player> players)
+        {
+            List<NetData.Player> sortedPlayers = players.OrderBy(x => -(x.Kills - x.Deaths)).ToList();
+            _ = SDL.SDL_SetRenderDrawColor(screen, Green.R, Green.G, Green.B, 195);
+            _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
+
+            IntPtr leaderboardTitleTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(titleFont, "Leaderboard", Blue.ToSDL(false));
+            IntPtr leaderboardTitleText = SDL.SDL_CreateTextureFromSurface(screen, leaderboardTitleTextSfc);
+            _ = SDL.SDL_QueryTexture(leaderboardTitleText, out _, out _, out int w, out int h);
+            SDL.SDL_Rect dstRect = new() { x = (cfg.ViewportWidth / 2) - (w / 2), y = 10, w = w, h = h };
+            _ = SDL.SDL_RenderCopy(screen, leaderboardTitleText, IntPtr.Zero, ref dstRect);
+            SDL.SDL_FreeSurface(leaderboardTitleTextSfc);
+            SDL.SDL_DestroyTexture(leaderboardTitleText);
+
+            IntPtr headerKillsTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "K", Blue.ToSDL(false));
+            IntPtr headerKillsText = SDL.SDL_CreateTextureFromSurface(screen, headerKillsTextSfc);
+            _ = SDL.SDL_QueryTexture(headerKillsText, out _, out _, out w, out h);
+            dstRect = new() { x = cfg.ViewportWidth - 175 - (w / 2), y = 55, w = w, h = h };
+            _ = SDL.SDL_RenderCopy(screen, headerKillsText, IntPtr.Zero, ref dstRect);
+            SDL.SDL_FreeSurface(headerKillsTextSfc);
+            SDL.SDL_DestroyTexture(headerKillsText);
+
+            IntPtr headerDeathsTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "D", Blue.ToSDL(false));
+            IntPtr headerDeathsText = SDL.SDL_CreateTextureFromSurface(screen, headerDeathsTextSfc);
+            _ = SDL.SDL_QueryTexture(headerDeathsText, out _, out _, out w, out h);
+            dstRect = new() { x = cfg.ViewportWidth - 105 - (w / 2), y = 55, w = w, h = h };
+            _ = SDL.SDL_RenderCopy(screen, headerDeathsText, IntPtr.Zero, ref dstRect);
+            SDL.SDL_FreeSurface(headerDeathsTextSfc);
+            SDL.SDL_DestroyTexture(headerDeathsText);
+
+            IntPtr headerDiffTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "S", Blue.ToSDL(false));
+            IntPtr headerDiffText = SDL.SDL_CreateTextureFromSurface(screen, headerDiffTextSfc);
+            _ = SDL.SDL_QueryTexture(headerDiffText, out _, out _, out w, out h);
+            dstRect = new() { x = cfg.ViewportWidth - 35 - (w / 2), y = 55, w = w, h = h };
+            _ = SDL.SDL_RenderCopy(screen, headerDiffText, IntPtr.Zero, ref dstRect);
+            SDL.SDL_FreeSurface(headerDiffTextSfc);
+            SDL.SDL_DestroyTexture(headerDiffText);
+
+            for (int i = 0; i < sortedPlayers.Count; i++)
+            {
+                NetData.Player plr = sortedPlayers[i];
+                int lineY = (33 * i) + 65;
+
+                IntPtr nameTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, plr.Name, Blue.ToSDL(false));
+                IntPtr nameText = SDL.SDL_CreateTextureFromSurface(screen, nameTextSfc);
+                _ = SDL.SDL_QueryTexture(nameText, out _, out _, out w, out h);
+                dstRect = new() { x = 20, y = lineY, w = w, h = h };
+                _ = SDL.SDL_RenderCopy(screen, nameText, IntPtr.Zero, ref dstRect);
+                SDL.SDL_FreeSurface(nameTextSfc);
+                SDL.SDL_DestroyTexture(nameText);
+
+                IntPtr killsTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, plr.Kills.ToString(), Blue.ToSDL(false));
+                IntPtr killsText = SDL.SDL_CreateTextureFromSurface(screen, killsTextSfc);
+                _ = SDL.SDL_QueryTexture(killsText, out _, out _, out w, out h);
+                dstRect = new() { x = cfg.ViewportWidth - 175 - (w / 2), y = lineY, w = w, h = h };
+                _ = SDL.SDL_RenderCopy(screen, killsText, IntPtr.Zero, ref dstRect);
+                SDL.SDL_FreeSurface(killsTextSfc);
+                SDL.SDL_DestroyTexture(killsText);
+
+                IntPtr deathsTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, plr.Deaths.ToString(), Blue.ToSDL(false));
+                IntPtr deathsText = SDL.SDL_CreateTextureFromSurface(screen, deathsTextSfc);
+                _ = SDL.SDL_QueryTexture(deathsText, out _, out _, out w, out h);
+                dstRect = new() { x = cfg.ViewportWidth - 105 - (w / 2), y = lineY, w = w, h = h };
+                _ = SDL.SDL_RenderCopy(screen, deathsText, IntPtr.Zero, ref dstRect);
+                SDL.SDL_FreeSurface(deathsTextSfc);
+                SDL.SDL_DestroyTexture(deathsText);
+
+                IntPtr diffTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, (plr.Kills - plr.Deaths).ToString(), Blue.ToSDL(false));
+                IntPtr diffText = SDL.SDL_CreateTextureFromSurface(screen, diffTextSfc);
+                _ = SDL.SDL_QueryTexture(diffText, out _, out _, out w, out h);
+                dstRect = new() { x = cfg.ViewportWidth - 35 - (w / 2), y = lineY, w = w, h = h };
+                _ = SDL.SDL_RenderCopy(screen, diffText, IntPtr.Zero, ref dstRect);
+                SDL.SDL_FreeSurface(diffTextSfc);
+                SDL.SDL_DestroyTexture(diffText);
+            }
+        }
     }
 }
