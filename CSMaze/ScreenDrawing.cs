@@ -1,4 +1,5 @@
-﻿using SDL2;
+﻿using Newtonsoft.Json.Linq;
+using SDL2;
 using System.Drawing;
 using System.Numerics;
 
@@ -279,6 +280,26 @@ namespace CSMaze
             _ = SDL.SDL_SetRenderDrawColor(screen, DarkGrey.R, DarkGrey.G, DarkGrey.B, 255);
             spriteRect.y = cfg.ViewportHeight / 2;
             _ = SDL.SDL_RenderFillRect(screen, ref spriteRect);
+        }
+
+        /// <summary>
+        /// Draw textured sky based on facing direction. Player position does not affect sky, only direction.
+        /// </summary>
+        public static void DrawSkyTexture(IntPtr screen, Config cfg, Vector2 facing, Vector2 cameraPlane, IntPtr skyTexture)
+        {
+            int displayColumnWidth = cfg.ViewportWidth / cfg.DisplayColumns;
+            for (int index = 0; index < cfg.DisplayColumns; index++)
+            {
+                int cameraX = (2 * index / cfg.DisplayColumns) - 1;
+                Vector2 castDirection = facing + (cameraPlane * cameraX);
+                double angle = Math.Atan2(castDirection.X, castDirection.Y);
+                int textureX = (int)(angle / Math.PI * MazeGame.TextureWidth);
+                // Creates a "mirror" effect preventing a seam when the texture repeats.
+                textureX = angle >= 0 ? textureX % MazeGame.TextureWidth : MazeGame.TextureWidth - (textureX % MazeGame.TextureWidth) - 1;
+                SDL.SDL_Rect srcRect = new() { x = textureX, y = 0, w = 1, h = MazeGame.TextureHeight };
+                SDL.SDL_Rect dstRect = new() { x = index * displayColumnWidth, y = 0, w = displayColumnWidth, h = cfg.ViewportHeight / 2 };
+                _ = SDL.SDL_RenderCopy(screen, skyTexture, ref srcRect, ref dstRect);
+            }
         }
     }
 }
