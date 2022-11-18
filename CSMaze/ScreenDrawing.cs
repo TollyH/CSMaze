@@ -59,14 +59,16 @@ namespace CSMaze
             _ = SDL.SDL_SetRenderDrawColor(screen, Green.R, Green.G, Green.B, 195);
             _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
-            IntPtr timeScoreText = SDL_ttf.TTF_RenderText_Blended(font, $"Time Score: {timeScore * Math.Min(1.0, timeOnScreen / 2):F1}", DarkRed.ToSDL(false));
-            timeScoreText = SDL.SDL_CreateTextureFromSurface(screen, timeScoreText);
+            IntPtr timeScoreTextSfc = SDL_ttf.TTF_RenderText_Blended(font, $"Time Score: {timeScore * Math.Min(1.0, timeOnScreen / 2):F1}", DarkRed.ToSDL(false));
+            IntPtr timeScoreText = SDL.SDL_CreateTextureFromSurface(screen, timeScoreTextSfc);
             if (timeOnScreen < 2 && victorySoundsPlayed[currentLevel] == 0)
             {
                 victorySoundsPlayed[currentLevel] = 1;
                 _ = SDL_mixer.Mix_PlayChannel(-1, victoryIncrement, 1);
             }
             _ = DrawTextureAtPosition(screen, timeScoreText, new Point(10, 10));
+            SDL.SDL_FreeSurface(timeScoreTextSfc);
+            SDL.SDL_DestroyTexture(timeScoreText);
             if (timeOnScreen >= 2 && victorySoundsPlayed[currentLevel] == 1)
             {
                 victorySoundsPlayed[currentLevel] = 2;
@@ -74,14 +76,16 @@ namespace CSMaze
             }
             if (timeOnScreen >= 2.5)
             {
-                IntPtr moveScoreText = SDL_ttf.TTF_RenderText_Blended(font, $"Move Score: {moveScore * Math.Min(1.0, (timeOnScreen - 2.5) / 2):F1}", DarkRed.ToSDL(false));
-                moveScoreText = SDL.SDL_CreateTextureFromSurface(screen, moveScoreText);
+                IntPtr moveScoreTextSfc = SDL_ttf.TTF_RenderText_Blended(font, $"Move Score: {moveScore * Math.Min(1.0, (timeOnScreen - 2.5) / 2):F1}", DarkRed.ToSDL(false));
+                IntPtr moveScoreText = SDL.SDL_CreateTextureFromSurface(screen, moveScoreTextSfc);
                 if (victorySoundsPlayed[currentLevel] == 2)
                 {
                     victorySoundsPlayed[currentLevel] = 3;
                     _ = SDL_mixer.Mix_PlayChannel(-1, victoryIncrement, 1);
                 }
                 _ = DrawTextureAtPosition(screen, moveScoreText, new Point(10, 40));
+                SDL.SDL_FreeSurface(moveScoreTextSfc);
+                SDL.SDL_DestroyTexture(moveScoreText);
                 if (timeOnScreen >= 4.5 && victorySoundsPlayed[currentLevel] == 3)
                 {
                     victorySoundsPlayed[currentLevel] = 4;
@@ -90,12 +94,16 @@ namespace CSMaze
             }
             if (timeOnScreen >= 5.5)
             {
-                IntPtr bestTimeScoreText = SDL_ttf.TTF_RenderText_Blended(font, $"Best Time Score: {highscores[currentLevel].Item1:F1}", DarkRed.ToSDL(false));
-                bestTimeScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestTimeScoreText);
-                IntPtr bestMoveScoreText = SDL_ttf.TTF_RenderText_Blended(font, $"Best Move Score: {highscores[currentLevel].Item2:F1}", DarkRed.ToSDL(false));
-                bestMoveScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestMoveScoreText);
+                IntPtr bestTimeScoreTextSfc = SDL_ttf.TTF_RenderText_Blended(font, $"Best Time Score: {highscores[currentLevel].Item1:F1}", DarkRed.ToSDL(false));
+                IntPtr bestTimeScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestTimeScoreTextSfc);
+                IntPtr bestMoveScoreTextSfc = SDL_ttf.TTF_RenderText_Blended(font, $"Best Move Score: {highscores[currentLevel].Item2:F1}", DarkRed.ToSDL(false));
+                IntPtr bestMoveScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestMoveScoreTextSfc);
                 _ = DrawTextureAtPosition(screen, bestTimeScoreText, new Point(10, 90));
                 _ = DrawTextureAtPosition(screen, bestMoveScoreText, new Point(10, 120));
+                SDL.SDL_FreeSurface(bestTimeScoreTextSfc);
+                SDL.SDL_DestroyTexture(bestTimeScoreText);
+                SDL.SDL_FreeSurface(bestMoveScoreTextSfc);
+                SDL.SDL_DestroyTexture(bestMoveScoreText);
                 if (victorySoundsPlayed[currentLevel] == 4)
                 {
                     victorySoundsPlayed[currentLevel] = 5;
@@ -104,12 +112,16 @@ namespace CSMaze
             }
             if (timeOnScreen >= 6.5)
             {
-                IntPtr bestTotalTimeScoreText = SDL_ttf.TTF_RenderText_Blended(font, $"Best Game Time Score: {highscores.Sum(x => x.Item1):F1}", DarkRed.ToSDL(false));
-                bestTotalTimeScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestTotalTimeScoreText);
-                IntPtr bestTotalMoveScoreText = SDL_ttf.TTF_RenderText_Blended(font, $"Best Game Move Score: {highscores.Sum(x => x.Item2):F1}", DarkRed.ToSDL(false));
-                bestTotalMoveScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestTotalMoveScoreText);
+                IntPtr bestTotalTimeScoreTextSfc = SDL_ttf.TTF_RenderText_Blended(font, $"Best Game Time Score: {highscores.Sum(x => x.Item1):F1}", DarkRed.ToSDL(false));
+                IntPtr bestTotalTimeScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestTotalTimeScoreTextSfc);
+                IntPtr bestTotalMoveScoreTextSfc = SDL_ttf.TTF_RenderText_Blended(font, $"Best Game Move Score: {highscores.Sum(x => x.Item2):F1}", DarkRed.ToSDL(false));
+                IntPtr bestTotalMoveScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestTotalMoveScoreTextSfc);
                 _ = DrawTextureAtPosition(screen, bestTotalTimeScoreText, new Point(10, 200));
                 _ = DrawTextureAtPosition(screen, bestTotalMoveScoreText, new Point(10, 230));
+                SDL.SDL_FreeSurface(bestTotalTimeScoreTextSfc);
+                SDL.SDL_DestroyTexture(bestTotalTimeScoreText);
+                SDL.SDL_FreeSurface(bestTotalMoveScoreTextSfc);
+                SDL.SDL_DestroyTexture(bestTotalMoveScoreText);
                 if (victorySoundsPlayed[currentLevel] == 5)
                 {
                     victorySoundsPlayed[currentLevel] = 6;
@@ -118,10 +130,12 @@ namespace CSMaze
             }
             if (timeOnScreen >= 7.5 && (currentLevel < levelCount - 1 || isCoop))
             {
-                IntPtr lowerHintText = SDL_ttf.TTF_RenderText_Blended(font, isCoop ? "Restart the server to play another level" : "Press `]` to go to next level",
+                IntPtr lowerHintTextSfc = SDL_ttf.TTF_RenderText_Blended(font, isCoop ? "Restart the server to play another level" : "Press `]` to go to next level",
                     DarkRed.ToSDL(false));
-                lowerHintText = SDL.SDL_CreateTextureFromSurface(screen, lowerHintText);
+                IntPtr lowerHintText = SDL.SDL_CreateTextureFromSurface(screen, lowerHintTextSfc);
                 _ = DrawTextureAtPosition(screen, lowerHintText, new Point(10, 280));
+                SDL.SDL_FreeSurface(lowerHintTextSfc);
+                SDL.SDL_DestroyTexture(lowerHintText);
                 if (victorySoundsPlayed[currentLevel] == 6)
                 {
                     victorySoundsPlayed[currentLevel] = 0;  // Reset
@@ -149,11 +163,13 @@ namespace CSMaze
             _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, 127);
             _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
-            IntPtr escapePrompt = SDL_ttf.TTF_RenderText_Blended(font, "Press W as fast as you can to escape!", White.ToSDL(false));
-            escapePrompt = SDL.SDL_CreateTextureFromSurface(screen, escapePrompt);
+            IntPtr escapePromptSfc = SDL_ttf.TTF_RenderText_Blended(font, "Press W as fast as you can to escape!", White.ToSDL(false));
+            IntPtr escapePrompt = SDL.SDL_CreateTextureFromSurface(screen, escapePromptSfc);
             _ = SDL.SDL_QueryTexture(escapePrompt, out _, out _, out int w, out int h);
             SDL.SDL_Rect textureRect = new() { x = (cfg.ViewportWidth / 2) - (w / 2), y = cfg.ViewportHeight - 45, w = w, h = h };
             _ = SDL.SDL_RenderCopy(screen, escapePrompt, IntPtr.Zero, ref textureRect);
+            SDL.SDL_FreeSurface(escapePromptSfc);
+            SDL.SDL_DestroyTexture(escapePrompt);
         }
     }
 }
