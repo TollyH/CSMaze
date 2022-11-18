@@ -1,10 +1,14 @@
-﻿using Newtonsoft.Json.Linq;
-using SDL2;
+﻿using SDL2;
 using System.Drawing;
 using System.Numerics;
 
 namespace CSMaze
 {
+    /// <summary>
+    /// Contains functions for performing most display related tasks, including
+    /// drawing columns, sprites, and HUD elements. Most audio and texture
+    /// loading/selection is handled in <see cref="Resources"/> rather than here.
+    /// </summary>
     public static class ScreenDrawing
     {
         public static readonly Color White = Color.FromArgb(0xff, 0xff, 0xff);
