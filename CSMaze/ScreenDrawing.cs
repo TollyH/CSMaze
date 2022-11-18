@@ -483,5 +483,49 @@ namespace CSMaze
                 SDL.SDL_DestroyTexture(gunHintText);
             }
         }
+
+        /// <summary>
+        /// Draws a compass to the lower right-hand corner of the screen. Points to
+        /// the target from the facing direction of the source, unless it is burned
+        /// or there is no target. The length of the line is determined by how long
+        /// the compass has been active.
+        /// </summary>
+        public static void DrawCompass(IntPtr screen, Config cfg, Vector2? target, Vector2 source, Vector2 facing, bool burned, float timeActive)
+        {
+            int compassOuterRadius = cfg.ViewportWidth / 6;
+            int compassInnerRadius = compassOuterRadius - (cfg.ViewportWidth / 100);
+            Point compassCentre = new(cfg.ViewportWidth - compassOuterRadius - (cfg.ViewportWidth / 50),
+                cfg.ViewportHeight - compassOuterRadius - (cfg.ViewportWidth / 50));
+            _ = SDL_gfx.filledCircleRGBA(screen, (short)compassCentre.X, (short)compassCentre.Y, (short)compassOuterRadius, Grey.R, Grey.G, Grey.B, 255);
+            _ = SDL_gfx.filledCircleRGBA(screen, (short)compassCentre.X, (short)compassCentre.Y, (short)compassInnerRadius, DarkGrey.R, DarkGrey.G, DarkGrey.B, 255);
+            if (target is not null && !burned)
+            {
+                // The distance between the player and the monster in each axis.
+                Vector2 relativePos = source - target.Value;
+                // The angle to the monster relative to the facing direction.
+                double direction = Math.Atan2(relativePos.X, relativePos.Y) - Math.Atan2(facing.X, facing.Y);
+                // Compass line gets shorter as it runs out of charge.
+                float lineLength = compassInnerRadius * timeActive / cfg.CompassTime;
+                Point lineEndCoords = new((int)(lineLength * Math.Sin(direction)) + compassCentre.X, (int)(lineLength * Math.Cos(direction)) + compassCentre.Y);
+                _ = SDL_gfx.thickLineRGBA(screen, (short)compassCentre.X, (short)compassCentre.Y, (short)lineEndCoords.X, (short)lineEndCoords.Y,
+                    (byte)Math.Max(1, Math.Min(cfg.ViewportWidth / 100, byte.MaxValue)), Red.R, Red.G, Red.B, 255);
+            }
+            else if (burned)
+            {
+                _ = SDL_gfx.filledCircleRGBA(screen, (short)compassCentre.X, (short)compassCentre.Y,
+                    (short)(compassInnerRadius * (cfg.CompassTime - timeActive) / cfg.CompassTime), Red.R, Red.G, Red.B, 255);
+            }
+        }
+
+        /// <summary>
+        /// Draw a transparent overlay over the entire viewport.
+        /// </summary>
+        /// <param name="strength">A float with a value between 0.0 and 1.0</param>
+        public static void FlashViewport(IntPtr screen, Color colour, float strength)
+        {
+            _ = SDL.SDL_SetRenderDrawColor(screen, colour.R, colour.G, colour.B, (byte)(255 * strength));
+            _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
+        }
     }
 }
