@@ -129,5 +129,31 @@ namespace CSMaze
                 }
             }
         }
+
+        /// <summary>
+        /// Draw the red kill screen with the monster fullscreen. Also used in multiplayer to display the player's killer.
+        /// </summary>
+        public static void DrawKillScreen(IntPtr screen, IntPtr jumpscareMonsterTexture)
+        {
+            _ = SDL.SDL_SetRenderDrawColor(screen, Red.R, Red.G, Red.B, 255);
+            _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
+            _ = SDL.SDL_RenderCopy(screen, jumpscareMonsterTexture, IntPtr.Zero, IntPtr.Zero);
+        }
+
+        /// <summary>
+        /// Draw the monster fullscreen and prompt the user to spam W to escape.
+        /// </summary>
+        public static void DrawEscapeScreen(IntPtr screen, Config cfg, IntPtr jumpscareMonsterTexture)
+        {
+            _ = DrawTextureAtPosition(screen, jumpscareMonsterTexture, new Point(MazeGame.RNG.Next(-5, 5), MazeGame.RNG.Next(-5, 5)));
+            _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, 127);
+            _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
+            IntPtr escapePrompt = SDL_ttf.TTF_RenderText_Blended(font, "Press W as fast as you can to escape!", White.ToSDL(false));
+            escapePrompt = SDL.SDL_CreateTextureFromSurface(screen, escapePrompt);
+            _ = SDL.SDL_QueryTexture(escapePrompt, out _, out _, out int w, out int h);
+            SDL.SDL_Rect textureRect = new() { x = (cfg.ViewportWidth / 2) - (w / 2), y = cfg.ViewportHeight - 45, w = w, h = h };
+            _ = SDL.SDL_RenderCopy(screen, escapePrompt, IntPtr.Zero, ref textureRect);
+        }
     }
 }
