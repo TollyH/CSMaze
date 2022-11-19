@@ -131,5 +131,72 @@ namespace CSMaze
             VictoryIncrement = SDL_mixer.Mix_LoadWAV(Path.Join("sounds", "victory_increment.wav"));
             VictoryNextBlock = SDL_mixer.Mix_LoadWAV(Path.Join("sounds", "victory_next_block.wav"));
         }
+
+        ~Resources()
+        {
+            SDL.SDL_DestroyTexture(PlaceholderTexture);
+            foreach ((IntPtr texture, IntPtr darkenedTexture) in WallTextures.Values)
+            {
+                SDL.SDL_DestroyTexture(texture);
+                SDL.SDL_DestroyTexture(darkenedTexture);
+            }
+            foreach (IntPtr texture in DecorationTextures.Values)
+            {
+                SDL.SDL_DestroyTexture(texture);
+            }
+            foreach (IntPtr texture in PlayerTextures)
+            {
+                SDL.SDL_DestroyTexture(texture);
+            }
+            SDL.SDL_DestroyTexture(SkyTexture);
+            foreach (IntPtr texture in SpriteTextures.Values)
+            {
+                SDL.SDL_DestroyTexture(texture);
+            }
+            foreach (IntPtr texture in HUDIcons.Values)
+            {
+                SDL.SDL_DestroyTexture(texture);
+            }
+            SDL.SDL_DestroyTexture(FirstPersonGun);
+            SDL.SDL_DestroyTexture(JumpscareMonsterTexture);
+
+            SDL_mixer.Mix_FreeChunk(MonsterJumpscareSound);
+            SDL_mixer.Mix_FreeChunk(MonsterSpottedSound);
+            foreach (IntPtr sound in BreathingSounds.Values)
+            {
+                SDL_mixer.Mix_FreeChunk(sound);
+            }
+            foreach (IntPtr sound in FootstepSounds)
+            {
+                SDL_mixer.Mix_FreeChunk(sound);
+            }
+            foreach (IntPtr sound in MonsterRoamSounds)
+            {
+                SDL_mixer.Mix_FreeChunk(sound);
+            }
+            foreach (IntPtr sound in KeyPickupSounds)
+            {
+                SDL_mixer.Mix_FreeChunk(sound);
+            }
+            SDL_mixer.Mix_FreeChunk(KeySensorPickupSound);
+            SDL_mixer.Mix_FreeChunk(GunPickupSound);
+            foreach (IntPtr sound in FlagPlaceSounds)
+            {
+                SDL_mixer.Mix_FreeChunk(sound);
+            }
+            foreach (IntPtr sound in WallPlaceSounds)
+            {
+                SDL_mixer.Mix_FreeChunk(sound);
+            }
+            SDL_mixer.Mix_FreeChunk(CompassOpenSound);
+            SDL_mixer.Mix_FreeChunk(CompassCloseSound);
+            SDL_mixer.Mix_FreeChunk(MapOpenSound);
+            SDL_mixer.Mix_FreeChunk(MapCloseSound);
+            SDL_mixer.Mix_FreeChunk(GunshotSound);
+            SDL_mixer.Mix_FreeChunk(LightFlickerSound);
+            SDL_mixer.Mix_FreeChunk(PlayerHitSound);
+            SDL_mixer.Mix_FreeChunk(VictoryIncrement);
+            SDL_mixer.Mix_FreeChunk(VictoryNextBlock);
+        }
     }
 }
