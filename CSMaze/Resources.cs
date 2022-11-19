@@ -14,6 +14,7 @@ namespace CSMaze
         public ImmutableDictionary<string, (IntPtr, IntPtr)> WallTextures { get; private set; }
         public ImmutableDictionary<string, IntPtr> DecorationTextures { get; private set; }
         public IntPtr[] PlayerTextures { get; private set; }
+        public ImmutableDictionary<int, IntPtr> PlayerWallTextures { get; private set; }
         public IntPtr SkyTexture { get; private set; }
         public ImmutableDictionary<SpriteType, IntPtr> SpriteTextures { get; private set; }
         public ImmutableDictionary<HUDIcon, IntPtr> HUDIcons { get; private set; }
@@ -40,6 +41,8 @@ namespace CSMaze
         public IntPtr PlayerHitSound { get; private set; }
         public IntPtr VictoryIncrement { get; private set; }
         public IntPtr VictoryNextBlock { get; private set; }
+
+        public IntPtr Music { get; private set; }
 
         public Resources(IntPtr renderer)
         {
@@ -74,7 +77,17 @@ namespace CSMaze
                     SDL_image.IMG_LoadTexture(renderer, imageName);
             }
             DecorationTextures = decorationTextures.ToImmutableDictionary();
+
             PlayerTextures = Directory.EnumerateFiles(Path.Join("textures", "player"), "*.png").Select(x => SDL_image.IMG_LoadTexture(renderer, x)).ToArray();
+
+            Dictionary<int, IntPtr> playerWallTextures = new();
+            foreach (string imageName in Directory.EnumerateFiles(Path.Join("textures", "player_wall"), "*.png"))
+            {
+                playerWallTextures[int.Parse(imageName.Split(Path.DirectorySeparatorChar)[^1].Split(".")[0])] =
+                    SDL_image.IMG_LoadTexture(renderer, imageName);
+            }
+            PlayerWallTextures = playerWallTextures.ToImmutableDictionary();
+
             SkyTexture = SDL_image.IMG_LoadTexture(renderer, Path.Join("textures", "sky.png"));
 
             SpriteTextures = new Dictionary<SpriteType, IntPtr>()
@@ -130,6 +143,9 @@ namespace CSMaze
             PlayerHitSound = SDL_mixer.Mix_LoadWAV(Path.Join("sounds", "player_hit.wav"));
             VictoryIncrement = SDL_mixer.Mix_LoadWAV(Path.Join("sounds", "victory_increment.wav"));
             VictoryNextBlock = SDL_mixer.Mix_LoadWAV(Path.Join("sounds", "victory_next_block.wav"));
+
+            // Constant ambient sound — loops infinitely
+            Music = SDL_mixer.Mix_LoadMUS(Path.Join("sounds", "ambience.wav"));
         }
 
         ~Resources()
@@ -145,6 +161,10 @@ namespace CSMaze
                 SDL.SDL_DestroyTexture(texture);
             }
             foreach (IntPtr texture in PlayerTextures)
+            {
+                SDL.SDL_DestroyTexture(texture);
+            }
+            foreach (IntPtr texture in PlayerWallTextures.Values)
             {
                 SDL.SDL_DestroyTexture(texture);
             }
@@ -197,6 +217,7 @@ namespace CSMaze
             SDL_mixer.Mix_FreeChunk(PlayerHitSound);
             SDL_mixer.Mix_FreeChunk(VictoryIncrement);
             SDL_mixer.Mix_FreeChunk(VictoryNextBlock);
+            SDL_mixer.Mix_FreeMusic(Music);
         }
     }
 }
