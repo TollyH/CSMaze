@@ -31,8 +31,8 @@ namespace CSMaze
         private static readonly IntPtr font = SDL_ttf.TTF_OpenFont(@"C:\Windows\Fonts\tahomabd.ttf", 24);
         private static readonly IntPtr titleFont = SDL_ttf.TTF_OpenFont(@"C:\Windows\Fonts\tahomabd.ttf", 30);
 
-        private static readonly List<float> totalTimeOnScreen = new();
-        private static readonly List<int> victorySoundsPlayed = new();
+        internal static readonly List<float> totalTimeOnScreen = new();
+        internal static readonly List<int> victorySoundsPlayed = new();
 
         /// <summary>
         /// Calls SDL_RenderCopy with a calculated width and height for the provided texture.

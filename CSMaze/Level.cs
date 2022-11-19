@@ -48,7 +48,7 @@ namespace CSMaze
         public ImmutableHashSet<Point> OriginalGuns { get; private set; }
         public HashSet<Point> Guns { get; private set; }
         public ImmutableDictionary<Point, string> Decorations { get; private set; }
-        public Point? MonsterCoords { get; private set; }
+        public Point? MonsterCoords { get; internal set; }
         public Point? MonsterStart { get; private set; }
         public float? MonsterWait { get; private set; }
         public HashSet<Point> PlayerFlags { get; private set; }
