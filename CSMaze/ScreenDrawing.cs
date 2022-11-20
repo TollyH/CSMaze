@@ -61,7 +61,8 @@ namespace CSMaze
             }
             totalTimeOnScreen[currentLevel] += frameTime;
             float timeOnScreen = totalTimeOnScreen[currentLevel];
-            _ = SDL.SDL_SetRenderDrawColor(screen, Green.R, Green.G, Green.B, 255);
+            _ = SDL.SDL_SetRenderDrawColor(screen, Green.R, Green.G, Green.B, 195);
+            _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
             IntPtr timeScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Time Score: {timeScore * Math.Min(1.0, timeOnScreen / 2):F1}", DarkRed.ToSDL(false));
             IntPtr timeScoreText = SDL.SDL_CreateTextureFromSurface(screen, timeScoreTextSfc);
@@ -551,7 +552,8 @@ namespace CSMaze
         /// </summary>
         public static void DrawResetPrompt(IntPtr screen, Config cfg)
         {
-            _ = SDL.SDL_SetRenderDrawColor(screen, LightBlue.R, LightBlue.G, LightBlue.B, 255);
+            _ = SDL.SDL_SetRenderDrawColor(screen, LightBlue.R, LightBlue.G, LightBlue.B, 195);
+            _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
 
             IntPtr resetPromptSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "Press 'y' to reset or 'n' to cancel", DarkGrey.ToSDL(false));

@@ -424,7 +424,7 @@ namespace CSMaze
                     }
                     else if (evn.type == SDL.SDL_EventType.SDL_MOUSEMOTION)
                     {
-                        if (enableMouseControl && (!displayMap || cfg.EnableCheatMap) && !isResetPromptShown)
+                        if (enableMouseControl && (!displayMap || cfg.EnableCheatMap) && !isResetPromptShown && !levels[currentLevel].Won)
                         {
                             _ = SDL.SDL_GetMouseState(out int x, out int y);
                             // How far the mouse has actually moved since the last frame.
@@ -566,34 +566,7 @@ namespace CSMaze
                 }
 
                 Point? monsterCoords;
-                // Victory screen
-                if (levels[currentLevel].Won)
-                {
-                    if (SDL_mixer.Mix_PlayingMusic() != 0)
-                    {
-                        SDL_mixer.Mix_PauseMusic();
-                    }
-                    // Overwrite existing highscores if required
-                    bool highscoresUpdated = false;
-                    if (timeScores[currentLevel] < highscores[currentLevel].Item1 || highscores[currentLevel].Item1 == 0)
-                    {
-                        highscores[currentLevel].Item1 = timeScores[currentLevel];
-                        highscoresUpdated = true;
-                    }
-                    if (moveScores[currentLevel] < highscores[currentLevel].Item2 || highscores[currentLevel].Item2 == 0)
-                    {
-                        highscores[currentLevel].Item2 = moveScores[currentLevel];
-                        highscoresUpdated = true;
-                    }
-                    if (highscoresUpdated && !Directory.Exists("highscores.json"))
-                    {
-                        File.WriteAllText("highscores.json", JsonConvert.SerializeObject(highscores));
-                    }
-                    ScreenDrawing.DrawVictoryScreen(screen, highscores, currentLevel, timeScores[currentLevel], moveScores[currentLevel],
-                        frameTime, isCoop, resources.VictoryIncrement, resources.VictoryNextBlock, levelJsonPath);
-                }
-                // Death screen
-                else if (levels[currentLevel].Killed)
+                if (levels[currentLevel].Killed)
                 {
                     if (SDL_mixer.Mix_PlayingMusic() != 0)
                     {
@@ -607,13 +580,13 @@ namespace CSMaze
                     ScreenDrawing.DrawKillScreen(screen, !isMulti || isCoop ? resources.JumpscareMonsterTexture : resources.PlayerTextures[lastKillerSkin]);
                 }
                 // Currently playing
-                else if (!isResetPromptShown)
+                else
                 {
-                    if (SDL_mixer.Mix_PlayingMusic() == 0)
+                    if (SDL_mixer.Mix_PlayingMusic() == 0 && !levels[currentLevel].Won && !isResetPromptShown)
                     {
                         SDL_mixer.Mix_ResumeMusic();
                     }
-                    if (hasStartedLevel[currentLevel])
+                    if (hasStartedLevel[currentLevel] && !levels[currentLevel].Won && !isResetPromptShown)
                     {
                         // Progress time-based attributes and events
                         timeScores[currentLevel] += frameTime;
@@ -708,7 +681,7 @@ namespace CSMaze
                     {
                         timeToBreathingFinish -= frameTime;
                     }
-                    if (timeToBreathingFinish <= 0 && hasStartedLevel[currentLevel])
+                    if (timeToBreathingFinish <= 0 && hasStartedLevel[currentLevel] && !levels[currentLevel].Won && !isResetPromptShown)
                     {
                         // There is no monster, so play the calmest breathing sound
                         IntPtr selectedSound = resources.BreathingSounds[resources.BreathingSounds.Keys.Max()];
@@ -738,7 +711,8 @@ namespace CSMaze
                         timeToNextRoamSound -= frameTime;
                     }
                     monsterCoords = levels[currentLevel].MonsterCoords;
-                    if (timeToNextRoamSound <= 0 && monsterCoords is not null && monsterEscapeClicks[currentLevel] == -1 && cfg.MonsterSoundRoaming)
+                    if (timeToNextRoamSound <= 0 && monsterCoords is not null && monsterEscapeClicks[currentLevel] == -1 && cfg.MonsterSoundRoaming
+                        && !levels[currentLevel].Won && !isResetPromptShown)
                     {
                         IntPtr selectedSound = resources.MonsterRoamSounds[RNG.Next(resources.MonsterRoamSounds.Length)];
                         timeToNextRoamSound = GetAudioLength(selectedSound) + cfg.MonsterRoamSoundDelay;
@@ -866,7 +840,7 @@ namespace CSMaze
                         }
                     }
 
-                    if (displayMap)
+                    if (displayMap && !levels[currentLevel].Won && !isResetPromptShown)
                     {
                         (Point, float)? currentPlayerWall = playerWalls[currentLevel];
                         ScreenDrawing.DrawMap(screen, cfg, levels[currentLevel], displayRays, rayEndCoords, facingDirections[currentLevel],
@@ -888,7 +862,8 @@ namespace CSMaze
                     }
 
                     monsterCoords = levels[currentLevel].MonsterCoords;
-                    if (monsterCoords is not null && (!displayMap || cfg.EnableCheatMap) && cfg.MonsterFlickerLights && flickerTimeRemaining[currentLevel] > 0)
+                    if (monsterCoords is not null && (!displayMap || cfg.EnableCheatMap) && cfg.MonsterFlickerLights && flickerTimeRemaining[currentLevel] > 0
+                         && !levels[currentLevel].Won && !isResetPromptShown)
                     {
                         // Darken viewport intermittently based on monster distance
                         ScreenDrawing.FlashViewport(screen, ScreenDrawing.Black, 0.5f);
@@ -896,12 +871,12 @@ namespace CSMaze
                         flickerTimeRemaining[currentLevel] = Math.Max(0, flickerTimeRemaining[currentLevel]);
                     }
 
-                    if (hasGun[currentLevel] && (!displayMap || cfg.EnableCheatMap))
+                    if (hasGun[currentLevel] && (!displayMap || cfg.EnableCheatMap) && !levels[currentLevel].Won)
                     {
                         ScreenDrawing.DrawGun(screen, cfg, resources.FirstPersonGun);
                     }
 
-                    if (displayCompass && (!displayMap || cfg.EnableCheatMap))
+                    if (displayCompass && (!displayMap || cfg.EnableCheatMap) && !levels[currentLevel].Won)
                     {
                         monsterCoords = levels[currentLevel].MonsterCoords;
                         Vector2? compassTarget = monsterCoords is null ? null : monsterCoords.Value.ToVector2() + new Vector2(0.5f, 0.5f);
@@ -909,7 +884,7 @@ namespace CSMaze
                             compassBurnedOut[currentLevel], compassTimes[currentLevel]);
                     }
 
-                    if (displayStats && (!displayMap || cfg.EnableCheatMap))
+                    if (displayStats && (!displayMap || cfg.EnableCheatMap) && !levels[currentLevel].Won)
                     {
                         if (!isMulti || isCoop)
                         {
@@ -931,7 +906,7 @@ namespace CSMaze
                         }
                     }
 
-                    if (monsterEscapeClicks[currentLevel] >= 0)
+                    if (monsterEscapeClicks[currentLevel] >= 0 && !levels[currentLevel].Won && !isResetPromptShown)
                     {
                         ScreenDrawing.DrawEscapeScreen(screen, cfg, resources.JumpscareMonsterTexture);
                         monsterEscapeTime[currentLevel] -= frameTime;
@@ -940,6 +915,32 @@ namespace CSMaze
                             levels[currentLevel].Killed = true;
                         }
                     }
+                }
+
+                if (levels[currentLevel].Won)
+                {
+                    if (SDL_mixer.Mix_PlayingMusic() != 0)
+                    {
+                        SDL_mixer.Mix_PauseMusic();
+                    }
+                    // Overwrite existing highscores if required
+                    bool highscoresUpdated = false;
+                    if (timeScores[currentLevel] < highscores[currentLevel].Item1 || highscores[currentLevel].Item1 == 0)
+                    {
+                        highscores[currentLevel].Item1 = timeScores[currentLevel];
+                        highscoresUpdated = true;
+                    }
+                    if (moveScores[currentLevel] < highscores[currentLevel].Item2 || highscores[currentLevel].Item2 == 0)
+                    {
+                        highscores[currentLevel].Item2 = moveScores[currentLevel];
+                        highscoresUpdated = true;
+                    }
+                    if (highscoresUpdated && !Directory.Exists("highscores.json"))
+                    {
+                        File.WriteAllText("highscores.json", JsonConvert.SerializeObject(highscores));
+                    }
+                    ScreenDrawing.DrawVictoryScreen(screen, highscores, currentLevel, timeScores[currentLevel], moveScores[currentLevel],
+                        frameTime, isCoop, resources.VictoryIncrement, resources.VictoryNextBlock, levelJsonPath);
                 }
 
                 if (isMulti && !isCoop && !levels[currentLevel].Killed && !displayStats && (!displayMap || cfg.EnableCheatMap))
