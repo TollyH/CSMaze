@@ -149,7 +149,7 @@ namespace CSMaze
             for (int i = 0; i < levels.Length; i++)
             {
                 facingDirections[i] = new Vector2(0, 1);
-                cameraPlanes[i] = new Vector2(-cfg.DisplayFov / 100, 0);
+                cameraPlanes[i] = new Vector2(-cfg.DisplayFov / 100f, 0);
                 monsterEscapeClicks[i] = -1;
                 compassTimes[i] = cfg.CompassTime;
                 compassChargeDelays[i] = cfg.CompassChargeDelay;

@@ -20,11 +20,11 @@ namespace CSMaze
             public double EuclideanSquared { get; protected set; }
             public Point Tile { get; protected set; }
 
-            public Collision(Vector2 coordinate, double euclideanSquared)
+            public Collision(Vector2 coordinate, Point tile, double euclideanSquared)
             {
                 Coordinate = coordinate;
                 EuclideanSquared = euclideanSquared;
-                Tile = coordinate.Floor();
+                Tile = tile;
             }
         }
 
@@ -42,7 +42,7 @@ namespace CSMaze
             public WallDirection Side { get; protected set; }
             public int Index { get; internal set; }
 
-            public WallCollision(Vector2 coordinate, double euclideanSquared, float drawDistance, WallDirection side, int index = -1) : base(coordinate, euclideanSquared)
+            public WallCollision(Vector2 coordinate, Point tile, double euclideanSquared, float drawDistance, WallDirection side, int index = -1) : base(coordinate, tile, euclideanSquared)
             {
                 DrawDistance = drawDistance;
                 Side = side;
@@ -61,7 +61,7 @@ namespace CSMaze
             public SpriteType Type { get; protected set; }
             public int? PlayerIndex { get; protected set; }
 
-            public SpriteCollision(Vector2 coordinate, double euclideanSquared, SpriteType type, int? playerIndex = null) : base(coordinate, euclideanSquared)
+            public SpriteCollision(Vector2 coordinate, Point tile, double euclideanSquared, SpriteType type, int? playerIndex = null) : base(coordinate, tile, euclideanSquared)
             {
                 Type = type;
                 PlayerIndex = playerIndex;
@@ -155,40 +155,40 @@ namespace CSMaze
                         Vector2 spriteApparentPos = currentTile.ToVector2() + new Vector2(0.5f, 0.5f);
                         if (currentLevel.ExitKeys.Contains(currentTile))
                         {
-                            sprites.Add(new SpriteCollision(spriteApparentPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Key));
+                            sprites.Add(new SpriteCollision(spriteApparentPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Key));
                         }
                         else if (currentLevel.KeySensors.Contains(currentTile))
                         {
-                            sprites.Add(new SpriteCollision(spriteApparentPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.KeySensor));
+                            sprites.Add(new SpriteCollision(spriteApparentPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.KeySensor));
                         }
                         else if (currentLevel.Guns.Contains(currentTile))
                         {
-                            sprites.Add(new SpriteCollision(spriteApparentPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Gun));
+                            sprites.Add(new SpriteCollision(spriteApparentPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Gun));
                         }
                         else if (currentLevel.Decorations.ContainsKey(currentTile))
                         {
-                            sprites.Add(new SpriteCollision(spriteApparentPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Decoration));
+                            sprites.Add(new SpriteCollision(spriteApparentPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Decoration));
                         }
                         else if (currentLevel.EndPoint == currentTile)
                         {
-                            sprites.Add(new SpriteCollision(spriteApparentPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos),
+                            sprites.Add(new SpriteCollision(spriteApparentPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos),
                                 currentLevel.ExitKeys.Count > 0 ? SpriteType.EndPoint : SpriteType.EndPointActive));
                         }
                         else if (currentLevel.MonsterStart == currentTile)
                         {
-                            sprites.Add(new SpriteCollision(spriteApparentPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.MonsterSpawn));
+                            sprites.Add(new SpriteCollision(spriteApparentPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.MonsterSpawn));
                         }
                         else if (currentLevel.StartPoint == currentTile)
                         {
-                            sprites.Add(new SpriteCollision(spriteApparentPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.StartPoint));
+                            sprites.Add(new SpriteCollision(spriteApparentPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.StartPoint));
                         }
                         else if (currentLevel.MonsterCoords == currentTile)
                         {
-                            sprites.Add(new SpriteCollision(spriteApparentPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Monster));
+                            sprites.Add(new SpriteCollision(spriteApparentPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Monster));
                         }
                         else if (currentLevel.PlayerFlags.Contains(currentTile))
                         {
-                            sprites.Add(new SpriteCollision(spriteApparentPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Flag));
+                            sprites.Add(new SpriteCollision(spriteApparentPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, spriteApparentPos), SpriteType.Flag));
                         }
                         int index = 0;
                         foreach (NetData.Player player in players)
@@ -196,7 +196,7 @@ namespace CSMaze
                             if (player.GridPos == currentTile)
                             {
                                 Vector2 playerPos = new(player.Pos.XPos, player.Pos.YPos);
-                                sprites.Add(new SpriteCollision(playerPos, NoSqrtCoordDistance(currentLevel.PlayerCoords, playerPos + (direction * distance)),
+                                sprites.Add(new SpriteCollision(playerPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, playerPos + (direction * distance)),
                                     SpriteType.OtherPlayer, index));
                             }
                             index++;
@@ -218,7 +218,7 @@ namespace CSMaze
             }
             // If this point is reached, a wall tile has been found.
             Vector2 collisionPoint = currentLevel.PlayerCoords + (direction * distance);
-            return (new WallCollision(collisionPoint, NoSqrtCoordDistance(currentLevel.PlayerCoords, collisionPoint), dimensionRayLength.X - stepSize.X,
+            return (new WallCollision(collisionPoint, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, collisionPoint), dimensionRayLength.X - stepSize.X,
                 sideWasNS ? (stepX < 0 ? WallDirection.East : WallDirection.West) : (stepY < 0 ? WallDirection.South : WallDirection.North)), sprites.ToArray());
         }
 
@@ -239,7 +239,7 @@ namespace CSMaze
                 (WallCollision? result, SpriteCollision[] newSprites) = GetFirstCollision(currentLevel, castDirection, edgeIsWall, players);
                 if (result == null)
                 {
-                    columns.Add(new WallCollision(new Vector2(), float.PositiveInfinity, float.PositiveInfinity, WallDirection.North, index));
+                    columns.Add(new WallCollision(new Vector2(), new Point(), float.PositiveInfinity, float.PositiveInfinity, WallDirection.North, index));
                 }
                 else
                 {
