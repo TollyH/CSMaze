@@ -359,7 +359,7 @@ namespace CSMaze
                                 isResetPromptShown = false;
                                 levels[currentLevel].Reset();
                                 facingDirections[currentLevel] = new Vector2(0, 1);
-                                cameraPlanes[currentLevel] = new Vector2(-cfg.DisplayFov / 100, 0);
+                                cameraPlanes[currentLevel] = new Vector2(-cfg.DisplayFov / 100f, 0);
                                 monsterTimeouts[currentLevel] = 0;
                                 monsterSpotted[currentLevel] = cfg.MonsterSpotTimeout;
                                 monsterEscapeClicks[currentLevel] = -1;
