@@ -452,7 +452,7 @@ namespace CSMaze
                     }
                 }
 
-                Size targetScreenSize = new(cfg.EnableCheatMap ? cfg.ViewportWidth * 2 : cfg.ViewportWidth, cfg.ViewportHeight);
+                Size targetScreenSize = new(cfg.EnableCheatMap && displayMap ? cfg.ViewportWidth * 2 : cfg.ViewportWidth, cfg.ViewportHeight);
                 SDL.SDL_GetWindowSize(window, out int w, out int h);
                 if (w != targetScreenSize.Width || h != targetScreenSize.Height)
                 {

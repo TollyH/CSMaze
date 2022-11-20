@@ -301,7 +301,8 @@ namespace CSMaze
             Vector2 facing, bool hasKeySensor, Point? playerWall)
         {
             _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, 255);
-            _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
+            SDL.SDL_Rect bgRect = new() { x = cfg.EnableCheatMap ? cfg.ViewportWidth : 0, y = 0, w = cfg.ViewportWidth, h = cfg.ViewportHeight };
+            _ = SDL.SDL_RenderFillRect(screen, ref bgRect);
             int tileWidth = cfg.ViewportWidth / currentLevel.Dimensions.Width;
             int tileHeight = cfg.ViewportHeight / currentLevel.Dimensions.Height;
             int xOffset = cfg.EnableCheatMap ? cfg.ViewportWidth : 0;
