@@ -1,6 +1,7 @@
 ﻿using SDL2;
 using System.Drawing;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace CSMaze
 {
@@ -251,12 +252,17 @@ namespace CSMaze
                 return;
             }
             Size spriteSize = new((int)Math.Abs(filledScreenWidth / transformation.Y), (int)Math.Abs(cfg.ViewportHeight / transformation.Y));
-            // TODO: Sprite fog
+            if (cfg.FogStrength > 0)
+            {
+                byte mask = (byte)Math.Min(byte.MaxValue, 255 - (255f / ((float)spriteSize.Height / cfg.ViewportHeight * cfg.FogStrength)));
+                _ = SDL.SDL_SetTextureColorMod(texture, mask, mask, mask);
+            }
             SDL.SDL_Rect spriteRect = new()
             {
                 x = screenXPos - (spriteSize.Width / 2), y = (cfg.ViewportHeight / 2) - (spriteSize.Height / 2), w = spriteSize.Width, h = spriteSize.Height
             };
             _ = SDL.SDL_RenderCopy(screen, texture, IntPtr.Zero, ref spriteRect);
+            _ = SDL.SDL_SetTextureColorMod(texture, 255, 255, 255);
         }
 
         /// <summary>
