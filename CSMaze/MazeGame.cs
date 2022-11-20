@@ -81,10 +81,10 @@ namespace CSMaze
             }
             List<NetData.Player> otherPlayers = new();
             float timeSinceServerPing = 0;
-            int hitsRemaining = 1;  // This will be updated later
-            int lastKillerSkin = 0;  // This will be updated later
-            int kills = 0;
-            int deaths = 0;
+            byte hitsRemaining = 1;  // This will be updated later
+            byte lastKillerSkin = 0;  // This will be updated later
+            ushort kills = 0;
+            ushort deaths = 0;
 
             IntPtr screen = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RendererFlags.SDL_RENDERER_TARGETTEXTURE | SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC);
             if (!isMulti)
@@ -146,8 +146,6 @@ namespace CSMaze
             float timeToBreathingFinish = 0;
             float timeToNextRoamSound = 0;
             (Point, float)?[] playerWalls = new (Point, float)?[levels.Length];
-            // Used to draw level behind victory/reset screens without having to raycast during every new frame.
-            IntPtr[] lastLevelFrame = new IntPtr[levels.Length];
             for (int i = 0; i < levels.Length; i++)
             {
                 facingDirections[i] = new Vector2(0, 1);
@@ -172,7 +170,6 @@ namespace CSMaze
             ulong renderStart = 0;
             ulong renderEnd = 0;
             float frameTime;
-            SDL.SDL_Event evn;
             bool quit = false;
 
             _ = SDL_mixer.Mix_PlayMusic(resources.Music, -1);
@@ -220,7 +217,7 @@ namespace CSMaze
                 {
                     throw new NotImplementedException();
                 }
-                while (SDL.SDL_PollEvent(out evn) != 0)
+                while (SDL.SDL_PollEvent(out SDL.SDL_Event evn) != 0)
                 {
                     if (evn.type == SDL.SDL_EventType.SDL_QUIT)
                     {
@@ -542,6 +539,7 @@ namespace CSMaze
                         displayMap = false;
                     }
 
+                    Point? monsterCoords;
                     // Victory screen
                     if (levels[currentLevel].Won)
                     {
@@ -565,7 +563,7 @@ namespace CSMaze
                         {
                             File.WriteAllText("highscores.json", JsonConvert.SerializeObject(highscores));
                         }
-                        ScreenDrawing.DrawVictoryScreen(screen, lastLevelFrame[currentLevel], highscores, currentLevel, timeScores[currentLevel], moveScores[currentLevel],
+                        ScreenDrawing.DrawVictoryScreen(screen, highscores, currentLevel, timeScores[currentLevel], moveScores[currentLevel],
                             frameTime, isCoop, resources.VictoryIncrement, resources.VictoryNextBlock, levelJsonPath);
                     }
                     // Death screen
@@ -663,7 +661,7 @@ namespace CSMaze
                                     displayMap = false;
                                 }
                                 monsterTimeouts[currentLevel] = 0;
-                                Point? monsterCoords = levels[currentLevel].MonsterCoords;
+                                monsterCoords = levels[currentLevel].MonsterCoords;
                                 if (monsterCoords is not null && cfg.MonsterFlickerLights && flickerTimeRemaining[currentLevel] <= 0)
                                 {
                                     flickerTimeRemaining[currentLevel] = 0;
@@ -688,7 +686,7 @@ namespace CSMaze
                         {
                             // There is no monster, so play the calmest breathing sound
                             IntPtr selectedSound = resources.BreathingSounds[resources.BreathingSounds.Keys.Max()];
-                            Point? monsterCoords = levels[currentLevel].MonsterCoords;
+                            monsterCoords = levels[currentLevel].MonsterCoords;
                             if (monsterCoords is not null)
                             {
                                 float distance = (float)Math.Sqrt(Raycasting.NoSqrtCoordDistance(levels[currentLevel].PlayerCoords, monsterCoords.Value.ToVector2()));
@@ -707,14 +705,227 @@ namespace CSMaze
                             timeToBreathingFinish = GetAudioLength(selectedSound);
                             _ = SDL_mixer.Mix_PlayChannel(-1, selectedSound, 0);
                         }
+
+                        // Play monster roaming sound if enough time has passed and monster is present.
+                        if (timeToNextRoamSound > 0)
+                        {
+                            timeToNextRoamSound -= frameTime;
+                        }
+                        monsterCoords = levels[currentLevel].MonsterCoords;
+                        if (timeToNextRoamSound <= 0 && monsterCoords is not null && monsterEscapeClicks[currentLevel] == -1 && cfg.MonsterSoundRoaming)
+                        {
+                            IntPtr selectedSound = resources.MonsterRoamSounds[RNG.Next(resources.MonsterRoamSounds.Length)];
+                            timeToNextRoamSound = GetAudioLength(selectedSound) + cfg.MonsterRoamSoundDelay;
+                            float distance = (float)Math.Sqrt(Raycasting.NoSqrtCoordDistance(levels[currentLevel].PlayerCoords, monsterCoords.Value.ToVector2()));
+                            // Adjust volume based on monster distance (the further away the quieter) — tanh limits values between 0 and 1.
+                            _ = SDL_mixer.Mix_VolumeChunk(selectedSound, (int)(Math.Tanh(3 / distance) * SDL_mixer.MIX_MAX_VOLUME));
+                            _ = SDL_mixer.Mix_PlayChannel(-1, selectedSound, 0);
+                        }
+
+                        if (!displayMap || cfg.EnableCheatMap)
+                        {
+                            ScreenDrawing.DrawSolidBackground(screen, cfg);
+                        }
+
+                        if (cfg.SkyTexturesEnabled && (!displayMap || cfg.EnableCheatMap))
+                        {
+                            ScreenDrawing.DrawSkyTexture(screen, cfg, facingDirections[currentLevel], cameraPlanes[currentLevel], resources.SkyTexture);
+                        }
+
+                        Raycasting.WallCollision[] columns;
+                        Raycasting.SpriteCollision[] sprites;
+                        if (!displayMap || cfg.EnableCollision)
+                        {
+                            (columns, sprites) = Raycasting.GetColumnsSprites(cfg.DisplayColumns, levels[currentLevel],
+                                cfg.DrawMazeEdgeAsWall, facingDirections[currentLevel], cameraPlanes[currentLevel], otherPlayers);
+                        }
+                        else
+                        {
+                            // Skip maze rendering if map is open as it will be obscuring entire viewport anyway.
+                            columns = Array.Empty<Raycasting.WallCollision>();
+                            sprites = Array.Empty<Raycasting.SpriteCollision>();
+                        }
+                        // A combination of both wall columns and sprites
+                        // Draw further away objects first so that closer walls obstruct sprites behind them.
+                        List<Raycasting.Collision> objects = columns.Concat<Raycasting.Collision>(sprites).OrderBy(x => -x.EuclideanSquared).ToList();
+                        // Used for displaying rays on cheat map, not used in rendering.
+                        List<Vector2> rayEndCoords = new();
+                        foreach (Raycasting.Collision collisionObject in objects)
+                        {
+                            if (collisionObject.GetType() == typeof(Raycasting.SpriteCollision))
+                            {
+                                Raycasting.SpriteCollision collisionSprite = (Raycasting.SpriteCollision)collisionObject;
+                                // Sprites are just flat images scaled and blitted onto the 3D view.
+                                IntPtr selectedSprite;
+                                if (collisionSprite.Type == SpriteType.Decoration)
+                                {
+                                    selectedSprite = resources.DecorationTextures.GetValueOrDefault(levels[currentLevel].Decorations[collisionSprite.Tile], resources.PlaceholderTexture);
+                                }
+                                else if (collisionSprite.Type == SpriteType.OtherPlayer)
+                                {
+                                    selectedSprite = resources.PlayerTextures[otherPlayers[collisionSprite.PlayerIndex!.Value].Skin];
+                                }
+                                else
+                                {
+                                    selectedSprite = resources.SpriteTextures[collisionSprite.Type];
+                                }
+                                ScreenDrawing.DrawSprite(screen, cfg, collisionSprite.Coordinate, levels[currentLevel].PlayerCoords, cameraPlanes[currentLevel],
+                                    facingDirections[currentLevel], selectedSprite);
+                                if (collisionSprite.Type == SpriteType.Monster)
+                                {
+                                    // If the monster has been rendered, play the jumpscare sound if enough time has passed since the last play. Also set the timer to 0 to reset it.
+                                    if (cfg.MonsterSoundOnSpot && monsterSpotted[currentLevel] == cfg.MonsterSpotTimeout)
+                                    {
+                                        _ = SDL_mixer.Mix_PlayChannel(-1, resources.MonsterSpottedSound, 0);
+                                    }
+                                    monsterSpotted[currentLevel] = 0;
+                                }
+                            }
+                            else if (collisionObject.GetType() == typeof(Raycasting.WallCollision))
+                            {
+                                Raycasting.WallCollision collisionWall = (Raycasting.WallCollision)collisionObject;
+                                // A column is a portion of a wall that was hit by a ray.
+                                bool sideWasNs = collisionWall.Side is WallDirection.North or WallDirection.South;
+                                // Edge of maze when drawing maze edges as walls is disabled
+                                // The entire ray will be skipped, revealing the horizon.
+                                if (collisionWall.DrawDistance == float.PositiveInfinity)
+                                {
+                                    continue;
+                                }
+                                if (displayRays)
+                                {
+                                    // For cheat map only
+                                    rayEndCoords.Add(collisionWall.Coordinate);
+                                }
+                                // Prevent division by 0
+                                float distance = (float)Math.Max(1e-5, collisionWall.DrawDistance);
+                                // An illusion of distance is achieved by drawing lines at different heights depending on the distance a ray travelled.
+                                int columnHeight = (int)(cfg.ViewportHeight / distance);
+                                // If a texture for the current level has been found or not.
+                                if (cfg.TexturesEnabled)
+                                {
+                                    (IntPtr, IntPtr) bothTextures;
+                                    (Point, float)? currentPlayerWall = playerWalls[currentLevel];
+                                    if (currentPlayerWall is not null && collisionWall.Tile == currentPlayerWall.Value.Item1)
+                                    {
+                                        // Select appropriate player wall texture depending on how long the wall has left until breaking.
+                                        bothTextures = resources.PlayerWallTextures[(int)((timeScores[currentLevel] - currentPlayerWall.Value.Item2)
+                                            / cfg.PlayerWallTime * resources.PlayerWallTextures.Count)];
+                                    }
+                                    else if (levels[currentLevel].IsCoordInBounds(collisionWall.Tile))
+                                    {
+                                        (string, string, string, string) tuple = levels[currentLevel][collisionWall.Tile].Wall!.Value;
+                                        string[] point = new string[4] { tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4 };
+                                        bothTextures = resources.WallTextures[point[(int)collisionWall.Side]];
+                                    }
+                                    else
+                                    {
+                                        // Maze edge was hit and we should render maze edges as walls at this point.
+                                        bothTextures = resources.WallTextures[levels[currentLevel].EdgeWallTextureName];
+                                    }
+                                    // Select either light or dark texture depending on side
+                                    IntPtr texture = sideWasNs ? bothTextures.Item2 : bothTextures.Item1;
+                                    ScreenDrawing.DrawTexturedColumn(screen, cfg, collisionWall.Coordinate, sideWasNs, columnHeight, collisionWall.Index,
+                                        facingDirections[currentLevel], texture, cameraPlanes[currentLevel]);
+                                }
+                                else
+                                {
+                                    ScreenDrawing.DrawUntexturedColumn(screen, cfg, collisionWall.Index, sideWasNs, columnHeight);
+                                }
+                            }
+                        }
+
+                        if (displayMap)
+                        {
+                            (Point, float)? currentPlayerWall = playerWalls[currentLevel];
+                            ScreenDrawing.DrawMap(screen, cfg, levels[currentLevel], displayRays, rayEndCoords, facingDirections[currentLevel],
+                                keySensorTimes[currentLevel] > 0, currentPlayerWall?.Item1);
+                        }
+
+                        if (pickupFlashTimeRemaining > 0)
+                        {
+                            ScreenDrawing.FlashViewport(screen, ScreenDrawing.White, pickupFlashTimeRemaining);
+                            pickupFlashTimeRemaining -= frameTime;
+                            pickupFlashTimeRemaining = Math.Max(0, pickupFlashTimeRemaining);
+                        }
+
+                        if (hurtFlashTimeRemaining > 0)
+                        {
+                            ScreenDrawing.FlashViewport(screen, ScreenDrawing.Red, hurtFlashTimeRemaining);
+                            hurtFlashTimeRemaining -= frameTime;
+                            hurtFlashTimeRemaining = Math.Max(0, hurtFlashTimeRemaining);
+                        }
+
+                        monsterCoords = levels[currentLevel].MonsterCoords;
+                        if (monsterCoords is not null && (!displayMap || cfg.EnableCheatMap) && cfg.MonsterFlickerLights && flickerTimeRemaining[currentLevel] > 0)
+                        {
+                            // Darken viewport intermittently based on monster distance
+                            ScreenDrawing.FlashViewport(screen, ScreenDrawing.Black, 0.5f);
+                            flickerTimeRemaining[currentLevel] -= frameTime;
+                            flickerTimeRemaining[currentLevel] = Math.Max(0, flickerTimeRemaining[currentLevel]);
+                        }
+
+                        if (hasGun[currentLevel] && (!displayMap || cfg.EnableCheatMap))
+                        {
+                            ScreenDrawing.DrawGun(screen, cfg, resources.FirstPersonGun);
+                        }
+
+                        if (displayCompass && (!displayMap || cfg.EnableCheatMap))
+                        {
+                            monsterCoords = levels[currentLevel].MonsterCoords;
+                            Vector2? compassTarget = monsterCoords is null ? null : monsterCoords.Value.ToVector2() + new Vector2(0.5f, 0.5f);
+                            ScreenDrawing.DrawCompass(screen, cfg, compassTarget, levels[currentLevel].PlayerCoords, facingDirections[currentLevel],
+                                compassBurnedOut[currentLevel], compassTimes[currentLevel]);
+                        }
+
+                        if (displayStats && (!displayMap || cfg.EnableCheatMap))
+                        {
+                            if (!isMulti || isCoop)
+                            {
+                                float timeScore = hasStartedLevel[currentLevel] ? timeScores[currentLevel] : highscores[currentLevel].Item1;
+                                float moveScore = hasStartedLevel[currentLevel] ? moveScores[currentLevel] : highscores[currentLevel].Item2;
+                                (Point, float)? currentPlayerWall = playerWalls[currentLevel];
+                                ScreenDrawing.DrawStats(screen, cfg, levels[currentLevel].MonsterCoords is not null, timeScore, moveScore,
+                                    levels[currentLevel].OriginalExitKeys.Count - levels[currentLevel].ExitKeys.Count, levels[currentLevel].ExitKeys.Count,
+                                    resources.HUDIcons, keySensorTimes[currentLevel], compassTimes[currentLevel], compassBurnedOut[currentLevel], currentPlayerWall?.Item2,
+                                    wallPlaceCooldown[currentLevel], timeScores[currentLevel], hasGun[currentLevel], isCoop);
+                            }
+                            else
+                            {
+                                List<NetData.Player> players = new(otherPlayers)
+                                {
+                                    new NetData.Player(multiplayerName!, new NetData.Coords(0, 0), 0, kills, deaths)
+                                };
+                                ScreenDrawing.DrawLeaderboard(screen, cfg, players);
+                            }
+                        }
+
+                        if (monsterEscapeClicks[currentLevel] >= 0)
+                        {
+                            ScreenDrawing.DrawEscapeScreen(screen, cfg, resources.JumpscareMonsterTexture);
+                            monsterEscapeTime[currentLevel] -= frameTime;
+                            if (monsterEscapeTime[currentLevel] <= 0)
+                            {
+                                levels[currentLevel].Killed = true;
+                            }
+                        }
+                    }
+
+                    if (isResetPromptShown)
+                    {
+                        if (SDL_mixer.Mix_PlayingMusic() != 0)
+                        {
+                            SDL_mixer.Mix_PauseMusic();
+                        }
+                        ScreenDrawing.DrawResetPrompt(screen, cfg);
                     }
                 }
 
                 SDL.SDL_RenderPresent(screen);
 
-                Console.Write($"\r{frameTime:000.00} - Position ({levels[currentLevel].PlayerCoords.X:000.00},{levels[currentLevel].PlayerCoords.Y:000.00})" +
-                    $" - Direction ({facingDirections[currentLevel].X:000.00},{facingDirections[currentLevel].Y:000.00})" +
-                    $" - Camera ({cameraPlanes[currentLevel].X:000.00},{cameraPlanes[currentLevel].Y:000.00})");
+                Console.Write($"\r{frameTime:000.00} - Position ({levels[currentLevel].PlayerCoords.X:00.00},{levels[currentLevel].PlayerCoords.Y:00.00})" +
+                    $" - Direction ({facingDirections[currentLevel].X:00.00},{facingDirections[currentLevel].Y:00.00})" +
+                    $" - Camera ({cameraPlanes[currentLevel].X:00.00},{cameraPlanes[currentLevel].Y:00.00})");
                 Console.Out.Flush();
 
                 renderEnd = SDL.SDL_GetPerformanceCounter();

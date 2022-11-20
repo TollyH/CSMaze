@@ -47,7 +47,7 @@ namespace CSMaze
         /// <summary>
         /// Draw the victory screen seen after beating a level. Displays numerous scores to the player in a gradual animation.
         /// </summary>
-        public static void DrawVictoryScreen(IntPtr screen, IntPtr background, IReadOnlyList<(float, float)> highscores, int currentLevel,
+        public static void DrawVictoryScreen(IntPtr screen, IReadOnlyList<(float, float)> highscores, int currentLevel,
             float timeScore, float moveScore, float frameTime, bool isCoop, IntPtr victoryIncrement, IntPtr victoryNextBlock, string levelJsonPath)
         {
             int levelCount = MazeLevels.LoadLevelJson(levelJsonPath).Length;
@@ -61,9 +61,7 @@ namespace CSMaze
             }
             totalTimeOnScreen[currentLevel] += frameTime;
             float timeOnScreen = totalTimeOnScreen[currentLevel];
-            _ = SDL.SDL_RenderCopy(screen, background, IntPtr.Zero, IntPtr.Zero);
-            _ = SDL.SDL_SetRenderDrawColor(screen, Green.R, Green.G, Green.B, 195);
-            _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            _ = SDL.SDL_SetRenderDrawColor(screen, Green.R, Green.G, Green.B, 255);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
             IntPtr timeScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Time Score: {timeScore * Math.Min(1.0, timeOnScreen / 2):F1}", DarkRed.ToSDL(false));
             IntPtr timeScoreText = SDL.SDL_CreateTextureFromSurface(screen, timeScoreTextSfc);
@@ -382,7 +380,7 @@ namespace CSMaze
         /// to the top left showing timeouts for wall placement, compass and sensor.
         /// </summary>
         public static void DrawStats(IntPtr screen, Config cfg, bool monsterSpawned, float timeScore, float moveScore, int remainingKeys, int startingKeys,
-            Dictionary<HUDIcon, IntPtr> hudIcons, IntPtr blankIcon, float keySensorTime, float compassTime, bool compassBurned, float? playerWallTime,
+            IReadOnlyDictionary<HUDIcon, IntPtr> hudIcons, float keySensorTime, float compassTime, bool compassBurned, float? playerWallTime,
             float wallPlaceCooldown, float currentLevelTime, bool hasGun, bool isCoop)
         {
             Color backgroundColour = monsterSpawned ? Red : Black;
@@ -410,7 +408,7 @@ namespace CSMaze
             SDL.SDL_Rect topBgRect = new() { x = 0, y = 0, w = isCoop ? 130 : 260, h = 75 };
             _ = SDL.SDL_RenderFillRect(screen, ref topBgRect);
 
-            _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Map, blankIcon), new Point(5, 5));
+            _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Map], new Point(5, 5));
             IntPtr spaceHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "‿", White.ToSDL(false));
             IntPtr spaceHintText = SDL.SDL_CreateTextureFromSurface(screen, spaceHintTextSfc);
             _ = DrawTextureAtPosition(screen, spaceHintText, new Point(11, 36));
@@ -421,14 +419,14 @@ namespace CSMaze
                 int topMargin = (int)(32 * (1 - (keySensorTime / cfg.KeySensorTime)));
                 SDL.SDL_Rect keySensorSrcRect = new() { x = 0, y = 0, w = 32, h = 32 - topMargin };
                 SDL.SDL_Rect keySensorDstRect = new() { x = 5, y = 5, w = 32, h = 32 - topMargin };
-                _ = SDL.SDL_RenderCopy(screen, hudIcons.GetValueIfExists(HUDIcon.KeySensor, blankIcon), ref keySensorSrcRect, ref keySensorDstRect);
+                _ = SDL.SDL_RenderCopy(screen, hudIcons[HUDIcon.KeySensor], ref keySensorSrcRect, ref keySensorDstRect);
             }
 
             Color colour;
 
             if (!isCoop)
             {
-                _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Flag, blankIcon), new Point(47, 5));
+                _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Flag], new Point(47, 5));
                 IntPtr flagHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "F", White.ToSDL(false));
                 IntPtr flagHintText = SDL.SDL_CreateTextureFromSurface(screen, flagHintTextSfc);
                 _ = DrawTextureAtPosition(screen, flagHintText, new Point(54, 40));
@@ -441,7 +439,7 @@ namespace CSMaze
                     : (1 - ((currentLevelTime - playerWallTime) / cfg.PlayerWallTime)))),
                     colour.R, colour.G, colour.B, 255);
 
-                _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.PlaceWall, blankIcon), new Point(59, 5));
+                _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.PlaceWall], new Point(59, 5));
                 IntPtr placeHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "Q", White.ToSDL(false));
                 IntPtr placeHintText = SDL.SDL_CreateTextureFromSurface(screen, placeHintTextSfc);
                 _ = DrawTextureAtPosition(screen, placeHintText, new Point(96, 40));
@@ -451,7 +449,7 @@ namespace CSMaze
 
             colour = compassBurned ? Red : DarkGreen;
             _ = SDL_gfx.filledCircleRGBA(screen, (short)(isCoop ? 64 : 148), 21, (short)(15 * (compassTime / cfg.CompassTime)), colour.R, colour.G, colour.B, 255);
-            _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Compass, blankIcon), new Point(isCoop ? 47 : 131, 5));
+            _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Compass], new Point(isCoop ? 47 : 131, 5));
             IntPtr compassHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "C", White.ToSDL(false));
             IntPtr compassHintText = SDL.SDL_CreateTextureFromSurface(screen, compassHintTextSfc);
             _ = DrawTextureAtPosition(screen, compassHintText, new Point(isCoop ? 54 : 139, 40));
@@ -460,7 +458,7 @@ namespace CSMaze
 
             if (!isCoop)
             {
-                _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Pause, blankIcon), new Point(173, 5));
+                _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Pause], new Point(173, 5));
                 IntPtr pauseHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "R", White.ToSDL(false));
                 IntPtr pauseHintText = SDL.SDL_CreateTextureFromSurface(screen, pauseHintTextSfc);
                 _ = DrawTextureAtPosition(screen, pauseHintText, new Point(181, 40));
@@ -468,7 +466,7 @@ namespace CSMaze
                 SDL.SDL_DestroyTexture(pauseHintText);
             }
 
-            _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Stats, blankIcon), new Point(isCoop ? 89 : 215, 5));
+            _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Stats], new Point(isCoop ? 89 : 215, 5));
             IntPtr statsHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "E", White.ToSDL(false));
             IntPtr statsHintText = SDL.SDL_CreateTextureFromSurface(screen, statsHintTextSfc);
             _ = DrawTextureAtPosition(screen, statsHintText, new Point(isCoop ? 96 : 223, 40));
@@ -479,7 +477,7 @@ namespace CSMaze
             {
                 SDL.SDL_Rect gunBgRect = new() { x = cfg.ViewportWidth - 45, y = 0, w = 45, h = 75 };
                 _ = SDL.SDL_RenderFillRect(screen, ref gunBgRect);
-                _ = DrawTextureAtPosition(screen, hudIcons.GetValueIfExists(HUDIcon.Gun, blankIcon), new Point(cfg.ViewportWidth - 37, 5));
+                _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Gun], new Point(cfg.ViewportWidth - 37, 5));
                 IntPtr gunHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "T", White.ToSDL(false));
                 IntPtr gunHintText = SDL.SDL_CreateTextureFromSurface(screen, gunHintTextSfc);
                 _ = DrawTextureAtPosition(screen, gunHintText, new Point(cfg.ViewportWidth - 29, 40));
@@ -535,11 +533,9 @@ namespace CSMaze
         /// <summary>
         /// Draw a transparent overlay over a given background asking the user if they are sure that they want to reset the level.
         /// </summary>
-        public static void DrawResetPrompt(IntPtr screen, Config cfg, IntPtr background)
+        public static void DrawResetPrompt(IntPtr screen, Config cfg)
         {
-            _ = SDL.SDL_RenderCopy(screen, background, IntPtr.Zero, IntPtr.Zero);
-            _ = SDL.SDL_SetRenderDrawColor(screen, LightBlue.R, LightBlue.G, LightBlue.B, 195);
-            _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            _ = SDL.SDL_SetRenderDrawColor(screen, LightBlue.R, LightBlue.G, LightBlue.B, 255);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
 
             IntPtr resetPromptSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "Press 'y' to reset or 'n' to cancel", DarkGrey.ToSDL(false));
