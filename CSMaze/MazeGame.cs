@@ -942,6 +942,13 @@ namespace CSMaze
                     }
                 }
 
+                if (isMulti && !isCoop && !levels[currentLevel].Killed && !displayStats && (!displayMap || cfg.EnableCheatMap))
+                {
+                    ScreenDrawing.DrawRemainingHits(screen, cfg, hitsRemaining);
+                    ScreenDrawing.DrawKillCount(screen, cfg, kills);
+                    ScreenDrawing.DrawDeathCount(screen, cfg, deaths);
+                }
+
                 if (isResetPromptShown)
                 {
                     if (SDL_mixer.Mix_PlayingMusic() != 0)
