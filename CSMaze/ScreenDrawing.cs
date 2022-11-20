@@ -297,6 +297,8 @@ namespace CSMaze
         public static void DrawMap(IntPtr screen, Config cfg, Level currentLevel, bool displayRays, IReadOnlyList<Vector2> rayEndCoords,
             Vector2 facing, bool hasKeySensor, Point? playerWall)
         {
+            _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, 255);
+            _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
             int tileWidth = cfg.ViewportWidth / currentLevel.Dimensions.Width;
             int tileHeight = cfg.ViewportHeight / currentLevel.Dimensions.Height;
             int xOffset = cfg.EnableCheatMap ? cfg.ViewportWidth : 0;
