@@ -193,7 +193,8 @@ namespace CSMaze
             _ = SDL.SDL_RenderFillRect(screen, ref columnRect);
             if (cfg.FogStrength > 0)
             {
-                _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, (byte)(255 / (columnHeight / cfg.ViewportHeight * cfg.FogStrength)));
+                _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B,
+                    (byte)Math.Min(byte.MaxValue, 255f / ((float)columnHeight / cfg.ViewportHeight * cfg.FogStrength)));
                 _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
                 _ = SDL.SDL_RenderFillRect(screen, ref columnRect);
             }
@@ -223,7 +224,8 @@ namespace CSMaze
             _ = SDL.SDL_RenderCopy(screen, texture, ref srcRect, ref dstRect);
             if (cfg.FogStrength > 0)
             {
-                _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, (byte)(255 / (columnHeight / cfg.ViewportHeight * cfg.FogStrength)));
+                _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B,
+                    (byte)Math.Min(byte.MaxValue, 255f / ((float)columnHeight / cfg.ViewportHeight * cfg.FogStrength)));
                 _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
                 _ = SDL.SDL_RenderFillRect(screen, ref dstRect);
             }
