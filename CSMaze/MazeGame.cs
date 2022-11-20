@@ -31,6 +31,14 @@ namespace CSMaze
             return Marshal.ReadByte(pressedArrayAddr, (int)scancode) != 0;
         }
 
+        public static unsafe float GetAudioLength(IntPtr chunk)
+        {
+            _ = SDL_mixer.Mix_QuerySpec(out int frequency, out ushort format, out int channels);
+            int points = (int)((SDL_mixer.MIX_Chunk*)chunk.ToPointer())->alen / ((format & 0xFF) / 8);
+            int frames = points / channels;
+            return frames / (float)frequency;
+        }
+
         /// <summary>
         /// Main function for the maze game. Manages all input, output, and timing.
         /// </summary>
@@ -166,6 +174,8 @@ namespace CSMaze
             float frameTime;
             SDL.SDL_Event evn;
             bool quit = false;
+
+            _ = SDL_mixer.Mix_PlayMusic(resources.Music, -1);
 
             // Used as both mouse and keyboard can be used to fire.
             void FireGun()
@@ -389,6 +399,313 @@ namespace CSMaze
                             {
                                 isResetPromptShown = false;
                             }
+                        }
+                    }
+                    else if (evn.type == SDL.SDL_EventType.SDL_MOUSEMOTION)
+                    {
+                        if (enableMouseControl && (!displayMap || cfg.EnableCheatMap) && !isResetPromptShown)
+                        {
+                            _ = SDL.SDL_GetMouseState(out int x, out int y);
+                            // How far the mouse has actually moved since the last frame.
+                            Point relativePos = new(oldMousePos.X - x, oldMousePos.Y - y);
+                            // Wrap mouse around screen edges
+                            if (x == 0)
+                            {
+                                SDL.SDL_WarpMouseInWindow(window, cfg.ViewportWidth - 2, y);
+                            }
+                            else if (x >= cfg.ViewportWidth - 1)
+                            {
+                                SDL.SDL_WarpMouseInWindow(window, 1, y);
+                            }
+                            // 0.0025 multiplier makes mouse speed more sensible while still using the same turn speed multiplier as the keyboard.
+                            float turnSpeedMod = cfg.TurnSpeed * -relativePos.X * 0.0025f;
+                            Vector2 oldDirection = facingDirections[currentLevel];
+                            facingDirections[currentLevel] = new Vector2((float)((oldDirection.X * Math.Cos(turnSpeedMod)) - (oldDirection.Y * Math.Sin(turnSpeedMod))),
+                                (float)((oldDirection.X * Math.Sin(turnSpeedMod)) + (oldDirection.Y * Math.Cos(turnSpeedMod))));
+                            Vector2 oldCameraPlane = cameraPlanes[currentLevel];
+                            cameraPlanes[currentLevel] = new Vector2((float)((oldCameraPlane.X * Math.Cos(turnSpeedMod)) - (oldCameraPlane.Y * Math.Sin(turnSpeedMod))),
+                                (float)((oldCameraPlane.X * Math.Sin(turnSpeedMod)) + (oldCameraPlane.Y * Math.Cos(turnSpeedMod))));
+                            oldMousePos = new Point(x, y);
+                        }
+                    }
+                }
+
+                Size targetScreenSize = new(cfg.EnableCheatMap ? cfg.ViewportWidth * 2 : cfg.ViewportWidth, cfg.ViewportHeight);
+                SDL.SDL_GetWindowSize(window, out int w, out int h);
+                if (w != targetScreenSize.Width || h != targetScreenSize.Height)
+                {
+                    SDL.SDL_SetWindowSize(window, targetScreenSize.Width, targetScreenSize.Height);
+                }
+
+                Vector2 oldPosition = levels[currentLevel].PlayerCoords;
+                // Do not allow the player to move while the map is open if cheat map is not enabled — or if the reset prompt is open.
+                if ((cfg.EnableCheatMap || !displayMap) && !isResetPromptShown && monsterEscapeClicks[currentLevel] == -1)
+                {
+                    // Held down keys — movement and turning
+                    float moveMultiplier = 1;
+                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_RCTRL) || IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_LCTRL))
+                    {
+                        moveMultiplier *= cfg.CrawlMultiplier;
+                    }
+                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_RSHIFT) || IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_LSHIFT))
+                    {
+                        if (!isMulti || isCoop)
+                        {
+                            moveMultiplier *= cfg.RunMultiplier;
+                        }
+                    }
+                    // Ensure framerate does not affect speed values
+                    float turnSpeedMod = frameTime * cfg.TurnSpeed;
+                    float moveSpeedMod = Math.Min(1, frameTime * cfg.MoveSpeed * moveMultiplier);
+                    // A set of events that occurred due to player movement
+                    HashSet<MoveEvent> events = new();
+                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_W) || IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_UP))
+                    {
+                        if (!levels[currentLevel].Won && !levels[currentLevel].Killed)
+                        {
+                            events.UnionWith(levels[currentLevel].MovePlayer(facingDirections[currentLevel] * moveSpeedMod, hasGun[currentLevel], true, cfg.EnableCollision));
+                            hasStartedLevel[currentLevel] = true;
+                        }
+                    }
+                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_S) || IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_DOWN))
+                    {
+                        if (!levels[currentLevel].Won && !levels[currentLevel].Killed)
+                        {
+                            events.UnionWith(levels[currentLevel].MovePlayer(-facingDirections[currentLevel] * moveSpeedMod, hasGun[currentLevel], true, cfg.EnableCollision));
+                            hasStartedLevel[currentLevel] = true;
+                        }
+                    }
+                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_A))
+                    {
+                        if (!levels[currentLevel].Won && !levels[currentLevel].Killed)
+                        {
+                            events.UnionWith(levels[currentLevel].MovePlayer(new Vector2(facingDirections[currentLevel].Y * moveSpeedMod, -facingDirections[currentLevel].X * moveSpeedMod),
+                                hasGun[currentLevel], true, cfg.EnableCollision));
+                            hasStartedLevel[currentLevel] = true;
+                        }
+                    }
+                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_D))
+                    {
+                        if (!levels[currentLevel].Won && !levels[currentLevel].Killed)
+                        {
+                            events.UnionWith(levels[currentLevel].MovePlayer(new Vector2(-facingDirections[currentLevel].Y * moveSpeedMod, facingDirections[currentLevel].X * moveSpeedMod),
+                                hasGun[currentLevel], true, cfg.EnableCollision));
+                            hasStartedLevel[currentLevel] = true;
+                        }
+                    }
+                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_RIGHT))
+                    {
+                        Vector2 oldDirection = facingDirections[currentLevel];
+                        facingDirections[currentLevel] = new Vector2((float)((oldDirection.X * Math.Cos(turnSpeedMod)) - (oldDirection.Y * Math.Sin(turnSpeedMod))),
+                            (float)((oldDirection.X * Math.Sin(turnSpeedMod)) + (oldDirection.Y * Math.Cos(turnSpeedMod))));
+                        Vector2 oldCameraPlane = cameraPlanes[currentLevel];
+                        cameraPlanes[currentLevel] = new Vector2((float)((oldCameraPlane.X * Math.Cos(turnSpeedMod)) - (oldCameraPlane.Y * Math.Sin(turnSpeedMod))),
+                            (float)((oldCameraPlane.X * Math.Sin(turnSpeedMod)) + (oldCameraPlane.Y * Math.Cos(turnSpeedMod))));
+                    }
+                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_LEFT))
+                    {
+                        Vector2 oldDirection = facingDirections[currentLevel];
+                        facingDirections[currentLevel] = new Vector2((float)((oldDirection.X * Math.Cos(-turnSpeedMod)) - (oldDirection.Y * Math.Sin(-turnSpeedMod))),
+                            (float)((oldDirection.X * Math.Sin(-turnSpeedMod)) + (oldDirection.Y * Math.Cos(-turnSpeedMod))));
+                        Vector2 oldCameraPlane = cameraPlanes[currentLevel];
+                        cameraPlanes[currentLevel] = new Vector2((float)((oldCameraPlane.X * Math.Cos(-turnSpeedMod)) - (oldCameraPlane.Y * Math.Sin(-turnSpeedMod))),
+                            (float)((oldCameraPlane.X * Math.Sin(-turnSpeedMod)) + (oldCameraPlane.Y * Math.Cos(-turnSpeedMod))));
+                    }
+                    if (events.Contains(MoveEvent.Pickup))
+                    {
+                        pickupFlashTimeRemaining = 0.4f;
+                    }
+                    if (events.Contains(MoveEvent.PickedUpKey))
+                    {
+                        _ = SDL_mixer.Mix_PlayChannel(-1, resources.KeyPickupSounds[RNG.Next(resources.KeyPickupSounds.Length)], 0);
+                    }
+                    if (events.Contains(MoveEvent.PickedUpKeySensor))
+                    {
+                        keySensorTimes[currentLevel] = cfg.KeySensorTime;
+                        _ = SDL_mixer.Mix_PlayChannel(-1, resources.KeySensorPickupSound, 0);
+                    }
+                    if (events.Contains(MoveEvent.PickedUpGun))
+                    {
+                        hasGun[currentLevel] = true;
+                        _ = SDL_mixer.Mix_PlayChannel(-1, resources.GunPickupSound, 0);
+                    }
+                    float oldMoveScore = moveScores[currentLevel];
+                    moveScores[currentLevel] += (float)Math.Sqrt(Raycasting.NoSqrtCoordDistance(oldPosition, levels[currentLevel].PlayerCoords));
+                    // Play footstep sound every time move score crosses every other integer boundary.
+                    if ((int)(moveScores[currentLevel] / 2) > (int)(oldMoveScore / 2))
+                    {
+                        _ = SDL_mixer.Mix_PlayChannel(-1, resources.FootstepSounds[RNG.Next(resources.FootstepSounds.Length)], 0);
+                    }
+                    if (events.Contains(MoveEvent.MonsterCaught) && cfg.EnableMonsterKilling && !isCoop)
+                    {
+                        monsterEscapeClicks[currentLevel] = 0;
+                        displayMap = false;
+                    }
+
+                    // Victory screen
+                    if (levels[currentLevel].Won)
+                    {
+                        if (SDL_mixer.Mix_PlayingMusic() != 0)
+                        {
+                            SDL_mixer.Mix_PauseMusic();
+                        }
+                        // Overwrite existing highscores if required
+                        bool highscoresUpdated = false;
+                        if (timeScores[currentLevel] < highscores[currentLevel].Item1 || highscores[currentLevel].Item1 == 0)
+                        {
+                            highscores[currentLevel].Item1 = timeScores[currentLevel];
+                            highscoresUpdated = true;
+                        }
+                        if (moveScores[currentLevel] < highscores[currentLevel].Item2 || highscores[currentLevel].Item2 == 0)
+                        {
+                            highscores[currentLevel].Item2 = moveScores[currentLevel];
+                            highscoresUpdated = true;
+                        }
+                        if (highscoresUpdated && !Directory.Exists("highscores.json"))
+                        {
+                            File.WriteAllText("highscores.json", JsonConvert.SerializeObject(highscores));
+                        }
+                        ScreenDrawing.DrawVictoryScreen(screen, lastLevelFrame[currentLevel], highscores, currentLevel, timeScores[currentLevel], moveScores[currentLevel],
+                            frameTime, isCoop, resources.VictoryIncrement, resources.VictoryNextBlock, levelJsonPath);
+                    }
+                    // Death screen
+                    else if (levels[currentLevel].Killed)
+                    {
+                        if (SDL_mixer.Mix_PlayingMusic() != 0)
+                        {
+                            SDL_mixer.Mix_PauseMusic();
+                        }
+                        if (cfg.MonsterSoundOnKill && hasStartedLevel[currentLevel])
+                        {
+                            _ = SDL_mixer.Mix_PlayChannel(-1, resources.MonsterJumpscareSound, 0);
+                            hasStartedLevel[currentLevel] = false;
+                        }
+                        ScreenDrawing.DrawKillScreen(screen, !isMulti || isCoop ? resources.JumpscareMonsterTexture : resources.PlayerTextures[lastKillerSkin]);
+                    }
+                    // Currently playing
+                    else if (!isResetPromptShown)
+                    {
+                        if (SDL_mixer.Mix_PlayingMusic() == 0)
+                        {
+                            SDL_mixer.Mix_ResumeMusic();
+                        }
+                        if (hasStartedLevel[currentLevel])
+                        {
+                            // Progress time-based attributes and events
+                            timeScores[currentLevel] += frameTime;
+                            monsterTimeouts[currentLevel] += frameTime;
+                            if (monsterSpotted[currentLevel] < cfg.MonsterSpotTimeout)
+                            {
+                                // Increment time since the monster was last spotted
+                                monsterSpotted[currentLevel] += frameTime;
+                                if (monsterSpotted[currentLevel] > cfg.MonsterSpotTimeout)
+                                {
+                                    monsterSpotted[currentLevel] = cfg.MonsterSpotTimeout;
+                                }
+                            }
+                            if (keySensorTimes[currentLevel] > 0)
+                            {
+                                keySensorTimes[currentLevel] -= frameTime;
+                                keySensorTimes[currentLevel] = Math.Max(0, keySensorTimes[currentLevel]);
+                            }
+                            if (wallPlaceCooldown[currentLevel] > 0)
+                            {
+                                wallPlaceCooldown[currentLevel] -= frameTime;
+                                wallPlaceCooldown[currentLevel] = Math.Max(0, wallPlaceCooldown[currentLevel]);
+                            }
+                            (Point, float)? currentPlayerWall = playerWalls[currentLevel];
+                            if (currentPlayerWall is not null && timeScores[currentLevel] > currentPlayerWall.Value.Item2 + cfg.PlayerWallTime)
+                            {
+                                // Remove player placed wall if enough time has passed
+                                levels[currentLevel][currentPlayerWall.Value.Item1] = new Level.GridSquareContents(null, false, false);
+                                playerWalls[currentLevel] = null;
+                                wallPlaceCooldown[currentLevel] = 0;
+                            }
+                            if (displayCompass && !compassBurnedOut[currentLevel] && levels[currentLevel].MonsterCoords is not null)
+                            {
+                                // Decay remaining compass time
+                                compassChargeDelays[currentLevel] = cfg.CompassChargeDelay;
+                                compassTimes[currentLevel] -= frameTime;
+                                if (compassTimes[currentLevel] <= 0)
+                                {
+                                    compassTimes[currentLevel] = 0;
+                                    compassBurnedOut[currentLevel] = true;
+                                }
+                            }
+                            else if (compassTimes[currentLevel] < cfg.CompassTime)
+                            {
+                                // Compass recharging
+                                if (compassChargeDelays[currentLevel] == 0 || compassBurnedOut[currentLevel])
+                                {
+                                    float multiplier = 1 / (compassBurnedOut[currentLevel] ? cfg.CompassChargeBurnMultiplier : cfg.CompassChargeNormMultiplier);
+                                    compassTimes[currentLevel] += frameTime * multiplier;
+                                    if (compassTimes[currentLevel] >= cfg.CompassTime)
+                                    {
+                                        compassTimes[currentLevel] = cfg.CompassTime;
+                                        compassBurnedOut[currentLevel] = false;
+                                    }
+                                }
+                                else if (compassChargeDelays[currentLevel] > 0)
+                                {
+                                    // Decrement delay before charging the compass
+                                    compassChargeDelays[currentLevel] -= frameTime;
+                                    compassChargeDelays[currentLevel] = Math.Max(0, compassChargeDelays[currentLevel]);
+                                }
+                            }
+                            float? monsterWait = levels[currentLevel].MonsterWait;
+                            // Move monster if it is enabled and enough time has passed since last move/level start.
+                            if (cfg.MonsterEnabled && monsterWait is not null && timeScores[currentLevel] > (cfg.MonsterStartOverride is null ? monsterWait : cfg.MonsterStartOverride)
+                                && monsterTimeouts[currentLevel] > cfg.MonsterMovementWait && monsterEscapeClicks[currentLevel] == -1 && !isCoop)
+                            {
+                                if (levels[currentLevel].MoveMonster() && cfg.EnableMonsterKilling)
+                                {
+                                    monsterEscapeClicks[currentLevel] = 0;
+                                    displayMap = false;
+                                }
+                                monsterTimeouts[currentLevel] = 0;
+                                Point? monsterCoords = levels[currentLevel].MonsterCoords;
+                                if (monsterCoords is not null && cfg.MonsterFlickerLights && flickerTimeRemaining[currentLevel] <= 0)
+                                {
+                                    flickerTimeRemaining[currentLevel] = 0;
+                                    double distance = Raycasting.NoSqrtCoordDistance(levels[currentLevel].PlayerCoords, monsterCoords.Value.ToVector2());
+                                    // Flicker on every monster movement when close. Also don't divide by anything less than 1, it will have no more effect than just 1.
+                                    distance = Math.Max(1, distance - 10);
+                                    // < 1 exponent makes probability decay less with distance
+                                    if (RNG.NextDouble() < 1 / Math.Pow(distance, 0.6))
+                                    {
+                                        flickerTimeRemaining[currentLevel] = (float)RNG.NextDouble(0, 0.5);
+                                        _ = SDL_mixer.Mix_PlayChannel(-1, resources.LightFlickerSound, 0);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (timeToBreathingFinish > 0)
+                        {
+                            timeToBreathingFinish -= frameTime;
+                        }
+                        if (timeToBreathingFinish <= 0 && hasStartedLevel[currentLevel])
+                        {
+                            // There is no monster, so play the calmest breathing sound
+                            IntPtr selectedSound = resources.BreathingSounds[resources.BreathingSounds.Keys.Max()];
+                            Point? monsterCoords = levels[currentLevel].MonsterCoords;
+                            if (monsterCoords is not null)
+                            {
+                                float distance = (float)Math.Sqrt(Raycasting.NoSqrtCoordDistance(levels[currentLevel].PlayerCoords, monsterCoords.Value.ToVector2()));
+                                foreach (int minDistance in resources.BreathingSounds.Keys)
+                                {
+                                    if (distance >= minDistance)
+                                    {
+                                        selectedSound = resources.BreathingSounds[minDistance];
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                            timeToBreathingFinish = GetAudioLength(selectedSound);
+                            _ = SDL_mixer.Mix_PlayChannel(-1, selectedSound, 0);
                         }
                     }
                 }

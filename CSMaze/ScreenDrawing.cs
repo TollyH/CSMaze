@@ -47,7 +47,7 @@ namespace CSMaze
         /// <summary>
         /// Draw the victory screen seen after beating a level. Displays numerous scores to the player in a gradual animation.
         /// </summary>
-        public static void DrawVictoryScreen(IntPtr screen, IntPtr background, List<(float, float)> highscores, int currentLevel,
+        public static void DrawVictoryScreen(IntPtr screen, IntPtr background, IReadOnlyList<(float, float)> highscores, int currentLevel,
             float timeScore, float moveScore, float frameTime, bool isCoop, IntPtr victoryIncrement, IntPtr victoryNextBlock, string levelJsonPath)
         {
             int levelCount = MazeLevels.LoadLevelJson(levelJsonPath).Length;

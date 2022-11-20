@@ -58,5 +58,10 @@ namespace CSMaze
         {
             return dictionary.ContainsKey(key) ? dictionary[key] : fallback;
         }
+
+        public static double NextDouble(this Random random, double min, double max)
+        {
+            return (random.NextDouble() * (max - min)) + min;
+        }
     }
 }

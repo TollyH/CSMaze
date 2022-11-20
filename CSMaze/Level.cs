@@ -293,7 +293,7 @@ namespace CSMaze
         /// which may be empty if nothing changed. All events are included, so for
         /// example if MovedGridDiagonally is returned, Moved will also be.
         /// </returns>
-        public HashSet<MoveEvent> MovePlayer(Vector2 vector, bool hasGun, bool relative, bool collisionCheck, bool multiplayer)
+        public HashSet<MoveEvent> MovePlayer(Vector2 vector, bool hasGun, bool relative, bool collisionCheck, bool multiplayer = false)
         {
             HashSet<MoveEvent> events = new();
             if ((Won || Killed) && !multiplayer)
