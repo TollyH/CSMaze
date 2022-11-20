@@ -14,7 +14,7 @@ namespace CSMaze
         public ImmutableDictionary<string, (IntPtr, IntPtr)> WallTextures { get; private set; }
         public ImmutableDictionary<string, IntPtr> DecorationTextures { get; private set; }
         public IntPtr[] PlayerTextures { get; private set; }
-        public ImmutableDictionary<int, IntPtr> PlayerWallTextures { get; private set; }
+        public ImmutableDictionary<int, (IntPtr, IntPtr)> PlayerWallTextures { get; private set; }
         public IntPtr SkyTexture { get; private set; }
         public ImmutableDictionary<SpriteType, IntPtr> SpriteTextures { get; private set; }
         public ImmutableDictionary<HUDIcon, IntPtr> HUDIcons { get; private set; }
@@ -80,11 +80,16 @@ namespace CSMaze
 
             PlayerTextures = Directory.EnumerateFiles(Path.Join("textures", "player"), "*.png").Select(x => SDL_image.IMG_LoadTexture(renderer, x)).ToArray();
 
-            Dictionary<int, IntPtr> playerWallTextures = new();
+            Dictionary<int, (IntPtr, IntPtr)> playerWallTextures = new();
             foreach (string imageName in Directory.EnumerateFiles(Path.Join("textures", "player_wall"), "*.png"))
             {
+                IntPtr loadedImage = SDL_image.IMG_Load(imageName);
+                IntPtr darkenedImage = SDL.SDL_DuplicateSurface(loadedImage);
+                _ = SDL.SDL_BlitSurface(darkener, IntPtr.Zero, darkenedImage, IntPtr.Zero);
                 playerWallTextures[int.Parse(imageName.Split(Path.DirectorySeparatorChar)[^1].Split(".")[0])] =
-                    SDL_image.IMG_LoadTexture(renderer, imageName);
+                    (SDL.SDL_CreateTextureFromSurface(renderer, loadedImage), SDL.SDL_CreateTextureFromSurface(renderer, darkenedImage));
+                SDL.SDL_FreeSurface(loadedImage);
+                SDL.SDL_FreeSurface(darkenedImage);
             }
             PlayerWallTextures = playerWallTextures.ToImmutableDictionary();
 
@@ -164,9 +169,10 @@ namespace CSMaze
             {
                 SDL.SDL_DestroyTexture(texture);
             }
-            foreach (IntPtr texture in PlayerWallTextures.Values)
+            foreach ((IntPtr texture, IntPtr darkenedTexture) in PlayerWallTextures.Values)
             {
                 SDL.SDL_DestroyTexture(texture);
+                SDL.SDL_DestroyTexture(darkenedTexture);
             }
             SDL.SDL_DestroyTexture(SkyTexture);
             foreach (IntPtr texture in SpriteTextures.Values)
