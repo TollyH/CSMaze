@@ -408,7 +408,8 @@ namespace CSMaze
             SDL.SDL_Rect topBgRect = new() { x = 0, y = 0, w = isCoop ? 130 : 260, h = 75 };
             _ = SDL.SDL_RenderFillRect(screen, ref topBgRect);
 
-            _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Map], new Point(5, 5));
+            SDL.SDL_Rect hudRect = new() { x = 5, y = 5, w = 32, h = 32 };
+            _ = SDL.SDL_RenderCopy(screen, hudIcons[HUDIcon.Map], IntPtr.Zero, ref hudRect);
             IntPtr spaceHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "‿", White.ToSDL(false));
             IntPtr spaceHintText = SDL.SDL_CreateTextureFromSurface(screen, spaceHintTextSfc);
             _ = DrawTextureAtPosition(screen, spaceHintText, new Point(11, 36));
@@ -426,7 +427,8 @@ namespace CSMaze
 
             if (!isCoop)
             {
-                _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Flag], new Point(47, 5));
+                hudRect = new() { x = 47, y = 5, w = 32, h = 32 };
+                _ = SDL.SDL_RenderCopy(screen, hudIcons[HUDIcon.Flag], IntPtr.Zero, ref hudRect);
                 IntPtr flagHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "F", White.ToSDL(false));
                 IntPtr flagHintText = SDL.SDL_CreateTextureFromSurface(screen, flagHintTextSfc);
                 _ = DrawTextureAtPosition(screen, flagHintText, new Point(54, 40));
@@ -439,7 +441,8 @@ namespace CSMaze
                     : (1 - ((currentLevelTime - playerWallTime) / cfg.PlayerWallTime)))),
                     colour.R, colour.G, colour.B, 255);
 
-                _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.PlaceWall], new Point(59, 5));
+                hudRect = new() { x = 89, y = 5, w = 32, h = 32 };
+                _ = SDL.SDL_RenderCopy(screen, hudIcons[HUDIcon.PlaceWall], IntPtr.Zero, ref hudRect);
                 IntPtr placeHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "Q", White.ToSDL(false));
                 IntPtr placeHintText = SDL.SDL_CreateTextureFromSurface(screen, placeHintTextSfc);
                 _ = DrawTextureAtPosition(screen, placeHintText, new Point(96, 40));
@@ -449,7 +452,8 @@ namespace CSMaze
 
             colour = compassBurned ? Red : DarkGreen;
             _ = SDL_gfx.filledCircleRGBA(screen, (short)(isCoop ? 64 : 148), 21, (short)(15 * (compassTime / cfg.CompassTime)), colour.R, colour.G, colour.B, 255);
-            _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Compass], new Point(isCoop ? 47 : 131, 5));
+            hudRect = new() { x = isCoop ? 47 : 131, y = 5, w = 32, h = 32 };
+            _ = SDL.SDL_RenderCopy(screen, hudIcons[HUDIcon.Compass], IntPtr.Zero, ref hudRect);
             IntPtr compassHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "C", White.ToSDL(false));
             IntPtr compassHintText = SDL.SDL_CreateTextureFromSurface(screen, compassHintTextSfc);
             _ = DrawTextureAtPosition(screen, compassHintText, new Point(isCoop ? 54 : 139, 40));
@@ -458,7 +462,8 @@ namespace CSMaze
 
             if (!isCoop)
             {
-                _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Pause], new Point(173, 5));
+                hudRect = new() { x = 173, y = 5, w = 32, h = 32 };
+                _ = SDL.SDL_RenderCopy(screen, hudIcons[HUDIcon.Pause], IntPtr.Zero, ref hudRect);
                 IntPtr pauseHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "R", White.ToSDL(false));
                 IntPtr pauseHintText = SDL.SDL_CreateTextureFromSurface(screen, pauseHintTextSfc);
                 _ = DrawTextureAtPosition(screen, pauseHintText, new Point(181, 40));
@@ -466,7 +471,8 @@ namespace CSMaze
                 SDL.SDL_DestroyTexture(pauseHintText);
             }
 
-            _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Stats], new Point(isCoop ? 89 : 215, 5));
+            hudRect = new() { x = isCoop ? 89 : 215, y = 5, w = 32, h = 32 };
+            _ = SDL.SDL_RenderCopy(screen, hudIcons[HUDIcon.Stats], IntPtr.Zero, ref hudRect);
             IntPtr statsHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "E", White.ToSDL(false));
             IntPtr statsHintText = SDL.SDL_CreateTextureFromSurface(screen, statsHintTextSfc);
             _ = DrawTextureAtPosition(screen, statsHintText, new Point(isCoop ? 96 : 223, 40));
@@ -477,7 +483,8 @@ namespace CSMaze
             {
                 SDL.SDL_Rect gunBgRect = new() { x = cfg.ViewportWidth - 45, y = 0, w = 45, h = 75 };
                 _ = SDL.SDL_RenderFillRect(screen, ref gunBgRect);
-                _ = DrawTextureAtPosition(screen, hudIcons[HUDIcon.Gun], new Point(cfg.ViewportWidth - 37, 5));
+                hudRect = new() { x = cfg.ViewportWidth - 37, y = 5, w = 32, h = 32 };
+                _ = SDL.SDL_RenderCopy(screen, hudIcons[HUDIcon.Gun], IntPtr.Zero, ref hudRect);
                 IntPtr gunHintTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "T", White.ToSDL(false));
                 IntPtr gunHintText = SDL.SDL_CreateTextureFromSurface(screen, gunHintTextSfc);
                 _ = DrawTextureAtPosition(screen, gunHintText, new Point(cfg.ViewportWidth - 29, 40));
