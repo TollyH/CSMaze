@@ -209,7 +209,7 @@ namespace CSMaze
             // Determines how far along the texture we need to go by keeping only the decimal part of the collision coordinate.
             float positionAlongWall = (sideWasNs ? coord.X : coord.Y) % 1;
             int textureX = (int)(positionAlongWall * MazeGame.TextureWidth);
-            int cameraX = (2 * index / cfg.DisplayColumns) - 1;
+            float cameraX = (2f * index / cfg.DisplayColumns) - 1;
             Vector2 castDirection = facing + (cameraPlane * cameraX);
             if ((!sideWasNs && castDirection.X < 0) || (sideWasNs && castDirection.Y > 0))
             {

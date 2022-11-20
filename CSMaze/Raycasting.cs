@@ -220,7 +220,7 @@ namespace CSMaze
             Vector2 collisionPoint = currentLevel.PlayerCoords + (direction * distance);
             return (new WallCollision(collisionPoint, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, collisionPoint),
                 sideWasNS ? dimensionRayLength.Y - stepSize.Y : dimensionRayLength.X - stepSize.X,
-                sideWasNS ? (stepX < 0 ? WallDirection.East : WallDirection.West) : (stepY < 0 ? WallDirection.South : WallDirection.North)), sprites.ToArray());
+                sideWasNS ? (stepY < 0 ? WallDirection.South : WallDirection.North) : (stepX < 0 ? WallDirection.East : WallDirection.West)), sprites.ToArray());
         }
 
         /// <summary>
