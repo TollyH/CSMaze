@@ -99,7 +99,7 @@ namespace CSMaze
             {
                 SDL.SDL_SetWindowTitle(window, "PyMaze Deathmatch");
             }
-            IntPtr windowIcon = SDL_image.IMG_Load(Path.Join("window_icons", "main.png"));
+            IntPtr windowIcon = SDL_image.IMG_Load("main.png");
             SDL.SDL_SetWindowIcon(window, windowIcon);
 
             Resources resources = new(screen);
