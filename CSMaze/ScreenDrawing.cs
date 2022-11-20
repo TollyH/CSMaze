@@ -254,7 +254,7 @@ namespace CSMaze
             Size spriteSize = new((int)Math.Abs(filledScreenWidth / transformation.Y), (int)Math.Abs(cfg.ViewportHeight / transformation.Y));
             if (cfg.FogStrength > 0)
             {
-                byte mask = (byte)Math.Min(byte.MaxValue, 255 - (255f / ((float)spriteSize.Height / cfg.ViewportHeight * cfg.FogStrength)));
+                byte mask = (byte)(255 - Math.Min(byte.MaxValue, 255f / ((float)spriteSize.Height / cfg.ViewportHeight * cfg.FogStrength)));
                 _ = SDL.SDL_SetTextureColorMod(texture, mask, mask, mask);
             }
             SDL.SDL_Rect spriteRect = new()
