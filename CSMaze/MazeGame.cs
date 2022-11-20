@@ -204,7 +204,7 @@ namespace CSMaze
             // Game loop
             while (!quit)
             {
-                frameTime = (renderEnd - renderStart) / performanceFrequency;
+                frameTime = (renderEnd - renderStart) / (float)performanceFrequency;
                 renderStart = SDL.SDL_GetPerformanceCounter();
                 _ = SDL.SDL_RenderClear(screen);
                 if (File.GetLastWriteTime(configIniPath) > lastConfigEdit)
@@ -923,7 +923,7 @@ namespace CSMaze
 
                 SDL.SDL_RenderPresent(screen);
 
-                Console.Write($"\r{frameTime:000.00} - Position ({levels[currentLevel].PlayerCoords.X:00.00},{levels[currentLevel].PlayerCoords.Y:00.00})" +
+                Console.Write($"\r{1 / frameTime:000.00} - Position ({levels[currentLevel].PlayerCoords.X:00.00},{levels[currentLevel].PlayerCoords.Y:00.00})" +
                     $" - Direction ({facingDirections[currentLevel].X:00.00},{facingDirections[currentLevel].Y:00.00})" +
                     $" - Camera ({cameraPlanes[currentLevel].X:00.00},{cameraPlanes[currentLevel].Y:00.00})");
                 Console.Out.Flush();
