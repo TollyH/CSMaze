@@ -923,9 +923,9 @@ namespace CSMaze
 
                 SDL.SDL_RenderPresent(screen);
 
-                Console.Write($"\r{1 / frameTime:000.00} - Position ({levels[currentLevel].PlayerCoords.X:00.00},{levels[currentLevel].PlayerCoords.Y:00.00})" +
-                    $" - Direction ({facingDirections[currentLevel].X:00.00},{facingDirections[currentLevel].Y:00.00})" +
-                    $" - Camera ({cameraPlanes[currentLevel].X:00.00},{cameraPlanes[currentLevel].Y:00.00})");
+                Console.Write($"\r{1 / frameTime:000.00} FPS - Position ({levels[currentLevel].PlayerCoords.X: 00.00;-00.00},{levels[currentLevel].PlayerCoords.Y: 00.00;-00.00})" +
+                    $" - Direction ({facingDirections[currentLevel].X: 00.00;-00.00},{facingDirections[currentLevel].Y: 00.00;-00.00})" +
+                    $" - Camera ({cameraPlanes[currentLevel].X: 00.00;-00.00},{cameraPlanes[currentLevel].Y: 00.00;-00.00})");
                 Console.Out.Flush();
 
                 renderEnd = SDL.SDL_GetPerformanceCounter();
