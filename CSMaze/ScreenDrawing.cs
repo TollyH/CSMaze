@@ -278,12 +278,13 @@ namespace CSMaze
             int displayColumnWidth = cfg.ViewportWidth / cfg.DisplayColumns;
             for (int index = 0; index < cfg.DisplayColumns; index++)
             {
-                int cameraX = (2 * index / cfg.DisplayColumns) - 1;
+                float cameraX = (2f * index / cfg.DisplayColumns) - 1;
                 Vector2 castDirection = facing + (cameraPlane * cameraX);
                 double angle = Math.Atan2(castDirection.X, castDirection.Y);
-                int textureX = (int)(angle / Math.PI * MazeGame.TextureWidth);
+                int textureX = (int)Math.Floor(angle / Math.PI * MazeGame.TextureWidth);
                 // Creates a "mirror" effect preventing a seam when the texture repeats.
-                textureX = angle >= 0 ? textureX % MazeGame.TextureWidth : MazeGame.TextureWidth - (textureX % MazeGame.TextureWidth) - 1;
+                textureX = angle >= 0 ? textureX % MazeGame.TextureWidth
+                    : MazeGame.TextureWidth - (((textureX % MazeGame.TextureWidth) + MazeGame.TextureWidth) % MazeGame.TextureWidth) - 1;
                 SDL.SDL_Rect srcRect = new() { x = textureX, y = 0, w = 1, h = MazeGame.TextureHeight };
                 SDL.SDL_Rect dstRect = new() { x = index * displayColumnWidth, y = 0, w = displayColumnWidth, h = cfg.ViewportHeight / 2 };
                 _ = SDL.SDL_RenderCopy(screen, skyTexture, ref srcRect, ref dstRect);
