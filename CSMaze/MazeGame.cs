@@ -150,6 +150,7 @@ namespace CSMaze
             {
                 facingDirections[i] = new Vector2(0, 1);
                 cameraPlanes[i] = new Vector2(-cfg.DisplayFov / 100f, 0);
+                monsterEscapeTime[i] = cfg.MonsterTimeToEscape;
                 monsterEscapeClicks[i] = -1;
                 compassTimes[i] = cfg.CompassTime;
                 compassChargeDelays[i] = cfg.CompassChargeDelay;
@@ -765,6 +766,11 @@ namespace CSMaze
                             else if (collisionSprite.Type == SpriteType.OtherPlayer)
                             {
                                 selectedSprite = resources.PlayerTextures[otherPlayers[collisionSprite.PlayerIndex!.Value].Skin];
+                            }
+                            else if (collisionSprite.Type == SpriteType.Monster && monsterEscapeClicks[currentLevel] != -1)
+                            {
+                                // Don't draw monster in world if we're currently trying to escape it
+                                continue;
                             }
                             else
                             {

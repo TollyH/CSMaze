@@ -164,14 +164,15 @@ namespace CSMaze
         /// </summary>
         public static void DrawEscapeScreen(IntPtr screen, Config cfg, IntPtr jumpscareMonsterTexture)
         {
-            _ = DrawTextureAtPosition(screen, jumpscareMonsterTexture, new Point(MazeGame.RNG.Next(-5, 5), MazeGame.RNG.Next(-5, 5)));
+            SDL.SDL_Rect textureRect = new() { x = MazeGame.RNG.Next(-5, 5), y = MazeGame.RNG.Next(-5, 5), w = cfg.ViewportWidth, h = cfg.ViewportHeight };
+            _ = SDL.SDL_RenderCopy(screen, jumpscareMonsterTexture, IntPtr.Zero, ref textureRect);
             _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B, 127);
             _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
             IntPtr escapePromptSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, "Press W as fast as you can to escape!", White.ToSDL(false));
             IntPtr escapePrompt = SDL.SDL_CreateTextureFromSurface(screen, escapePromptSfc);
             _ = SDL.SDL_QueryTexture(escapePrompt, out _, out _, out int w, out int h);
-            SDL.SDL_Rect textureRect = new() { x = (cfg.ViewportWidth / 2) - (w / 2), y = cfg.ViewportHeight - 45, w = w, h = h };
+            textureRect = new() { x = (cfg.ViewportWidth / 2) - (w / 2), y = cfg.ViewportHeight - 45, w = w, h = h };
             _ = SDL.SDL_RenderCopy(screen, escapePrompt, IntPtr.Zero, ref textureRect);
             SDL.SDL_FreeSurface(escapePromptSfc);
             SDL.SDL_DestroyTexture(escapePrompt);
