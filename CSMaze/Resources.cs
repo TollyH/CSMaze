@@ -53,7 +53,7 @@ namespace CSMaze
             _ = SDL.SDL_SetRenderDrawColor(renderer, ScreenDrawing.Black.R, ScreenDrawing.Black.G, ScreenDrawing.Black.B, 127);
             _ = SDL.SDL_SetRenderDrawBlendMode(renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
 
-            IntPtr darkener = SDL.SDL_CreateRGBSurface(0, MazeGame.TextureWidth, MazeGame.TextureHeight, 32, 0x0000007F, 0x00007F00, 0x007F0000, 0xFF000000);
+            IntPtr darkener = SDL.SDL_CreateRGBSurface(0, MazeGame.TextureWidth, MazeGame.TextureHeight, 8, 255, 255, 255, 255);
 
             PlaceholderTexture = SDL_image.IMG_LoadTexture(renderer, Path.Join("textures", "placeholder.png"));
 
@@ -62,6 +62,7 @@ namespace CSMaze
             {
                 IntPtr loadedImage = SDL_image.IMG_Load(imageName);
                 IntPtr darkenedImage = SDL.SDL_DuplicateSurface(loadedImage);
+                _ = SDL.SDL_SetSurfaceColorMod(darkenedImage, 127, 127, 127);
                 _ = SDL.SDL_BlitSurface(darkener, IntPtr.Zero, darkenedImage, IntPtr.Zero);
                 wallTextures[string.Join(".", imageName.Split(Path.DirectorySeparatorChar)[^1].Split(".")[..^1])] =
                     (SDL.SDL_CreateTextureFromSurface(renderer, loadedImage), SDL.SDL_CreateTextureFromSurface(renderer, darkenedImage));
@@ -85,6 +86,7 @@ namespace CSMaze
             {
                 IntPtr loadedImage = SDL_image.IMG_Load(imageName);
                 IntPtr darkenedImage = SDL.SDL_DuplicateSurface(loadedImage);
+                _ = SDL.SDL_SetSurfaceColorMod(darkenedImage, 127, 127, 127);
                 _ = SDL.SDL_BlitSurface(darkener, IntPtr.Zero, darkenedImage, IntPtr.Zero);
                 playerWallTextures[int.Parse(imageName.Split(Path.DirectorySeparatorChar)[^1].Split(".")[0])] =
                     (SDL.SDL_CreateTextureFromSurface(renderer, loadedImage), SDL.SDL_CreateTextureFromSurface(renderer, darkenedImage));
