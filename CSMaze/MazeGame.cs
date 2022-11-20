@@ -399,6 +399,29 @@ namespace CSMaze
                             }
                         }
                     }
+                    else if (evn.type == SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN)
+                    {
+                        _ = SDL.SDL_GetMouseState(out int x, out int y);
+                        if (x <= cfg.ViewportWidth && evn.button.button == SDL.SDL_BUTTON_LEFT)
+                        {
+                            if (enableMouseControl && hasGun[currentLevel])
+                            {
+                                FireGun();
+                            }
+                            else
+                            {
+                                enableMouseControl = !enableMouseControl;
+                                if (enableMouseControl)
+                                {
+                                    SDL.SDL_WarpMouseInWindow(window, cfg.ViewportWidth / 2, cfg.ViewportHeight / 2);
+                                    oldMousePos = new Point(cfg.ViewportWidth / 2, cfg.ViewportHeight / 2);
+                                }
+                                // Hide cursor and confine to window if controlling with mouse
+                                _ = SDL.SDL_ShowCursor(enableMouseControl ? SDL.SDL_DISABLE : SDL.SDL_ENABLE);
+                                SDL.SDL_SetWindowMouseGrab(window, enableMouseControl ? SDL.SDL_bool.SDL_TRUE : SDL.SDL_bool.SDL_FALSE);
+                            }
+                        }
+                    }
                     else if (evn.type == SDL.SDL_EventType.SDL_MOUSEMOTION)
                     {
                         if (enableMouseControl && (!displayMap || cfg.EnableCheatMap) && !isResetPromptShown)
@@ -423,6 +446,7 @@ namespace CSMaze
                             Vector2 oldCameraPlane = cameraPlanes[currentLevel];
                             cameraPlanes[currentLevel] = new Vector2((float)((oldCameraPlane.X * Math.Cos(turnSpeedMod)) - (oldCameraPlane.Y * Math.Sin(turnSpeedMod))),
                                 (float)((oldCameraPlane.X * Math.Sin(turnSpeedMod)) + (oldCameraPlane.Y * Math.Cos(turnSpeedMod))));
+                            _ = SDL.SDL_GetMouseState(out x, out y);
                             oldMousePos = new Point(x, y);
                         }
                     }
