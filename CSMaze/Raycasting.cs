@@ -90,14 +90,14 @@ namespace CSMaze
             {
                 stepX = -1;
                 // X distance from the corner of the origin
-                dimensionRayLength.X = (currentLevel.PlayerCoords.X - currentTile.X) * stepX;
+                dimensionRayLength.X = (currentLevel.PlayerCoords.X - currentTile.X) * stepSize.X;
             }
             // Going positive X (right)
             else
             {
                 stepX = 1;
                 // X distance until origin tile is exited
-                dimensionRayLength.X = (currentTile.X + 1 - currentLevel.PlayerCoords.X) * stepX;
+                dimensionRayLength.X = (currentTile.X + 1 - currentLevel.PlayerCoords.X) * stepSize.X;
             }
             int stepY;
             // Going negative Y (up)
@@ -105,14 +105,14 @@ namespace CSMaze
             {
                 stepY = -1;
                 // Y distance from the corner of the origin
-                dimensionRayLength.Y = (currentLevel.PlayerCoords.Y - currentTile.Y) * stepY;
+                dimensionRayLength.Y = (currentLevel.PlayerCoords.Y - currentTile.Y) * stepSize.Y;
             }
             // Going positive Y (down)
             else
             {
                 stepY = 1;
                 // X distance until origin tile is exited
-                dimensionRayLength.Y = (currentTile.Y + 1 - currentLevel.PlayerCoords.Y) * stepY;
+                dimensionRayLength.Y = (currentTile.Y + 1 - currentLevel.PlayerCoords.Y) * stepSize.Y;
             }
 
             float distance = 0;
@@ -130,14 +130,14 @@ namespace CSMaze
                     {
                         currentTile = new Point(currentTile.X + stepX, currentTile.Y);
                         distance = dimensionRayLength.X;
-                        dimensionRayLength.X += stepX;
+                        dimensionRayLength.X += stepSize.X;
                         sideWasNS = false;
                     }
                     else
                     {
                         currentTile = new Point(currentTile.X, currentTile.Y + stepY);
                         distance = dimensionRayLength.Y;
-                        dimensionRayLength.Y += stepY;
+                        dimensionRayLength.Y += stepSize.Y;
                         sideWasNS = true;
                     }
                 }
@@ -218,7 +218,8 @@ namespace CSMaze
             }
             // If this point is reached, a wall tile has been found.
             Vector2 collisionPoint = currentLevel.PlayerCoords + (direction * distance);
-            return (new WallCollision(collisionPoint, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, collisionPoint), dimensionRayLength.X - stepSize.X,
+            return (new WallCollision(collisionPoint, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, collisionPoint),
+                sideWasNS ? dimensionRayLength.Y - stepSize.Y : dimensionRayLength.X - stepSize.X,
                 sideWasNS ? (stepX < 0 ? WallDirection.East : WallDirection.West) : (stepY < 0 ? WallDirection.South : WallDirection.North)), sprites.ToArray());
         }
 
@@ -234,7 +235,7 @@ namespace CSMaze
             HashSet<(Vector2, SpriteType)> knownSprites = new();
             for (int index = 0; index < displayColumns; index++)
             {
-                float cameraX = (2 * index / displayColumns) - 1;
+                float cameraX = (2f * index / displayColumns) - 1;
                 Vector2 castDirection = direction + (cameraPlane * cameraX);
                 (WallCollision? result, SpriteCollision[] newSprites) = GetFirstCollision(currentLevel, castDirection, edgeIsWall, players);
                 if (result == null)
