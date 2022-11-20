@@ -486,6 +486,8 @@ namespace CSMaze
 
             if (hasGun)
             {
+                _ = SDL.SDL_SetRenderDrawColor(screen, backgroundColour.R, backgroundColour.G, backgroundColour.B, 127);
+                _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
                 SDL.SDL_Rect gunBgRect = new() { x = cfg.ViewportWidth - 45, y = 0, w = 45, h = 75 };
                 _ = SDL.SDL_RenderFillRect(screen, ref gunBgRect);
                 hudRect = new() { x = cfg.ViewportWidth - 37, y = 5, w = 32, h = 32 };
