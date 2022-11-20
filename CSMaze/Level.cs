@@ -70,7 +70,7 @@ namespace CSMaze
             EndPoint = endPoint;
             // Start in the centre of the tile
             PlayerCoords = new Vector2(startPoint.X + 0.5f, startPoint.Y + 0.5f);
-            OriginalExitKeys = keySensors.ToImmutableHashSet();
+            OriginalExitKeys = exitKeys.ToImmutableHashSet();
             ExitKeys = exitKeys;
             OriginalKeySensors = keySensors.ToImmutableHashSet();
             KeySensors = keySensors;

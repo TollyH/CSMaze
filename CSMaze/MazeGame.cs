@@ -886,7 +886,7 @@ namespace CSMaze
                                 float moveScore = hasStartedLevel[currentLevel] ? moveScores[currentLevel] : highscores[currentLevel].Item2;
                                 (Point, float)? currentPlayerWall = playerWalls[currentLevel];
                                 ScreenDrawing.DrawStats(screen, cfg, levels[currentLevel].MonsterCoords is not null, timeScore, moveScore,
-                                    levels[currentLevel].OriginalExitKeys.Count - levels[currentLevel].ExitKeys.Count, levels[currentLevel].ExitKeys.Count,
+                                    levels[currentLevel].OriginalExitKeys.Count - levels[currentLevel].ExitKeys.Count, levels[currentLevel].OriginalExitKeys.Count,
                                     resources.HUDIcons, keySensorTimes[currentLevel], compassTimes[currentLevel], compassBurnedOut[currentLevel], currentPlayerWall?.Item2,
                                     wallPlaceCooldown[currentLevel], timeScores[currentLevel], hasGun[currentLevel], isCoop);
                             }
