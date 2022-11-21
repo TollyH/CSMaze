@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
+using System.Text;
 
 namespace CSMaze
 {
@@ -55,17 +56,19 @@ namespace CSMaze
                 {
                     players[i] = new NetData.Player(playerListBytes[((i * playerByteSize) + 6)..(((i + 1) * playerByteSize) + 6)]);
                 }
-                sock.Close();
                 return (hitsRemaining, lastKillerSkin, kills, deaths, players);
             }
             catch (SocketException)
+            {
+                return null;
+            }
+            finally
             {
                 try
                 {
                     sock.Close();
                 }
                 catch { }
-                return null;
             }
         }
 
@@ -112,12 +115,129 @@ namespace CSMaze
             }
             catch (SocketException)
             {
+                return null;
+            }
+            finally
+            {
                 try
                 {
                     sock.Close();
                 }
                 catch { }
+            }
+        }
+
+        /// <summary>
+        /// Join a server at the specified address. Returns the private player key assigned to us by the server,
+        /// the level the server is using, and whether the match is co-op or not.
+        /// </summary>
+        /// <returns>Null if a response doesn't arrive in a timely manner, otherwise: (playerKey, level, coop)</returns>
+        public static (byte[], int, bool)? JoinServer(UdpClient sock, IPEndPoint addr, string name)
+        {
+            // Player key is all 0 here as we don't have one yet, but all requests still need to have one.
+            byte[] toSend = new byte[56];
+            toSend[0] = (byte)RequestType.Join;
+            _ = Encoding.ASCII.GetBytes(name.ToCharArray(), 0, 24, toSend, 1);
+            try
+            {
+                sock.Connect(addr);
+                _ = sock.Send(toSend);
+                byte[] receivedBytes = sock.Receive(ref addr);
+                return (receivedBytes[..32], receivedBytes[32], receivedBytes[33] != 0);
+            }
+            catch (SocketException)
+            {
                 return null;
+            }
+            finally
+            {
+                try
+                {
+                    sock.Close();
+                }
+                catch { }
+            }
+        }
+
+        /// <summary>
+        /// Tell the server to fire a gunshot from the specified location in the specified facing direction.
+        /// </summary>
+        /// <returns>A ShotResponse, or null if a response doesn't arrive in a timely manner</returns>
+        public static ShotResponse? FireGun(UdpClient sock, IPEndPoint addr, byte[] playerKey, Vector2 coords, Vector2 facing)
+        {
+            byte[] coordBytes = new NetData.Coords(coords.X, coords.Y).ToByteArray();
+            byte[] facingBytes = new NetData.Coords(coords.X, coords.Y).ToByteArray();
+            byte[] toSend = new byte[33 + (NetData.Coords.ByteSize * 2)];
+            toSend[0] = (byte)RequestType.Fire;
+            Array.Copy(playerKey, 0, toSend, 1, 32);
+            Array.Copy(coordBytes, 0, toSend, 33, NetData.Coords.ByteSize);
+            Array.Copy(facingBytes, 0, toSend, 33 + NetData.Coords.ByteSize, NetData.Coords.ByteSize);
+            try
+            {
+                sock.Connect(addr);
+                _ = sock.Send(toSend);
+                byte[] receivedBytes = sock.Receive(ref addr);
+                return (ShotResponse)receivedBytes[0];
+            }
+            catch (SocketException)
+            {
+                return null;
+            }
+            finally
+            {
+                try
+                {
+                    sock.Close();
+                }
+                catch { }
+            }
+        }
+
+        /// <summary>
+        /// Tell the server to reset our hits and position. This will only work if you are already dead.
+        /// </summary>
+        public static void Respawn(UdpClient sock, IPEndPoint addr, byte[] playerKey)
+        {
+            try
+            {
+                byte[] toSend = new byte[33];
+                toSend[0] = (byte)RequestType.Respawn;
+                Array.Copy(playerKey, 0, toSend, 1, 32);
+                sock.Connect(addr);
+                _ = sock.Send(toSend);
+            }
+            catch (SocketException) { }
+            finally
+            {
+                try
+                {
+                    sock.Close();
+                }
+                catch { }
+            }
+        }
+
+        /// <summary>
+        /// Tell the server we are leaving the game. Our player key will become immediately unusable after this.
+        /// </summary>
+        public static void LeaveServer(UdpClient sock, IPEndPoint addr, byte[] playerKey)
+        {
+            try
+            {
+                byte[] toSend = new byte[33];
+                toSend[0] = (byte)RequestType.Leave;
+                Array.Copy(playerKey, 0, toSend, 1, 32);
+                sock.Connect(addr);
+                _ = sock.Send(toSend);
+            }
+            catch (SocketException) { }
+            finally
+            {
+                try
+                {
+                    sock.Close();
+                }
+                catch { }
             }
         }
     }

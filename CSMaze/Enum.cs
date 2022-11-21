@@ -56,4 +56,12 @@
         Respawn,
         Leave
     }
+
+    public enum ShotResponse
+    {
+        Denied,
+        Missed,
+        HitNoKill,
+        Killed
+    }
 }
