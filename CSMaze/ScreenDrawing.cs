@@ -225,8 +225,21 @@ namespace CSMaze
             SDL.SDL_Rect srcRect = new() { x = textureX, y = 0, w = 1, h = MazeGame.TextureHeight };
             SDL.SDL_Rect dstRect = new() { x = drawX, y = drawY, w = displayColumnWidth, h = columnHeight };
             _ = SDL.SDL_RenderCopy(screen, texture, ref srcRect, ref dstRect);
+            if (cfg.DrawReflections)
+            {
+                _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                dstRect.y += columnHeight;
+                _ = SDL.SDL_SetTextureAlphaMod(texture, 25);
+                _ = SDL.SDL_RenderCopyEx(screen, texture, ref srcRect, ref dstRect, 0, IntPtr.Zero, SDL.SDL_RendererFlip.SDL_FLIP_VERTICAL);
+                _ = SDL.SDL_SetTextureAlphaMod(texture, 255);
+            }
             if (cfg.FogStrength > 0)
             {
+                if (cfg.DrawReflections)
+                {
+                    dstRect.y -= columnHeight;
+                    dstRect.h *= 2;
+                }
                 _ = SDL.SDL_SetRenderDrawColor(screen, Black.R, Black.G, Black.B,
                     (byte)Math.Min(byte.MaxValue, 255f / ((float)columnHeight / cfg.ViewportHeight * cfg.FogStrength)));
                 _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
@@ -263,6 +276,14 @@ namespace CSMaze
             };
             _ = SDL.SDL_RenderCopy(screen, texture, IntPtr.Zero, ref spriteRect);
             _ = SDL.SDL_SetTextureColorMod(texture, 255, 255, 255);
+            if (cfg.DrawReflections)
+            {
+                _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                spriteRect.y += spriteSize.Height;
+                _ = SDL.SDL_SetTextureAlphaMod(texture, 25);
+                _ = SDL.SDL_RenderCopyEx(screen, texture, IntPtr.Zero, ref spriteRect, 0, IntPtr.Zero, SDL.SDL_RendererFlip.SDL_FLIP_VERTICAL);
+                _ = SDL.SDL_SetTextureAlphaMod(texture, 255);
+            }
         }
 
         /// <summary>
@@ -298,6 +319,14 @@ namespace CSMaze
                 SDL.SDL_Rect srcRect = new() { x = textureX, y = 0, w = 1, h = MazeGame.TextureHeight };
                 SDL.SDL_Rect dstRect = new() { x = index * displayColumnWidth, y = 0, w = displayColumnWidth, h = cfg.ViewportHeight / 2 };
                 _ = SDL.SDL_RenderCopy(screen, skyTexture, ref srcRect, ref dstRect);
+                if (cfg.DrawReflections)
+                {
+                    _ = SDL.SDL_SetRenderDrawBlendMode(screen, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                    dstRect.y = cfg.ViewportHeight / 2;
+                    _ = SDL.SDL_SetTextureAlphaMod(skyTexture, 25);
+                    _ = SDL.SDL_RenderCopyEx(screen, skyTexture, ref srcRect, ref dstRect, 0, IntPtr.Zero, SDL.SDL_RendererFlip.SDL_FLIP_VERTICAL);
+                    _ = SDL.SDL_SetTextureAlphaMod(skyTexture, 255);
+                }
             }
         }
 

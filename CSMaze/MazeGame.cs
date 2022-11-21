@@ -102,7 +102,7 @@ namespace CSMaze
             IntPtr windowIcon = SDL_image.IMG_Load("main.png");
             SDL.SDL_SetWindowIcon(window, windowIcon);
 
-            Resources resources = new(screen);
+            Resources resources = new(screen, window);
 
             // X+Y facing directions, times, moves, etc. are specific to each level, so are each stored in an array.
             Vector2[] facingDirections = new Vector2[levels.Length];
