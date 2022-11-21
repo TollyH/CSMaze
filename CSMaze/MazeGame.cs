@@ -65,7 +65,7 @@ namespace CSMaze
 
             int currentLevel;
             byte[] playerKey;
-            Socket? sock;
+            UdpClient? sock;
             IPEndPoint? addr;
             if (isMulti)
             {

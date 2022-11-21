@@ -47,4 +47,13 @@
         KeySensor,
         Gun
     }
+
+    public enum RequestType
+    {
+        Ping,
+        Join,
+        Fire,
+        Respawn,
+        Leave
+    }
 }

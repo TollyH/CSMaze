@@ -1,5 +1,6 @@
 ﻿using System.Buffers.Binary;
 using System.Drawing;
+using System.Numerics;
 using System.Text;
 
 namespace CSMaze
@@ -32,6 +33,16 @@ namespace CSMaze
                 BinaryPrimitives.WriteInt32BigEndian(bytes.AsSpan()[..^4], (int)(XPos * 100));
                 BinaryPrimitives.WriteInt32BigEndian(bytes.AsSpan()[4..8], (int)(YPos * 100));
                 return bytes;
+            }
+
+            public Point ToPoint()
+            {
+                return new Point((int)XPos, (int)YPos);
+            }
+
+            public Vector2 ToVector2()
+            {
+                return new Vector2(XPos, YPos);
             }
         }
 
