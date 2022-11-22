@@ -38,19 +38,19 @@ namespace CSMaze
         public string EdgeWallTextureName { get; private set; }
         public (string, string, string, string)?[,] WallMap { get; private set; }
         public (bool, bool)[,] CollisionMap { get; private set; }
-        public Point StartPoint { get; private set; }
-        public Point EndPoint { get; private set; }
+        public Point StartPoint { get; internal set; }
+        public Point EndPoint { get; internal set; }
         public Vector2 PlayerCoords { get; private set; }
-        public ImmutableHashSet<Point> OriginalExitKeys { get; private set; }
+        public ImmutableHashSet<Point> OriginalExitKeys { get; internal set; }
         public HashSet<Point> ExitKeys { get; private set; }
-        public ImmutableHashSet<Point> OriginalKeySensors { get; private set; }
+        public ImmutableHashSet<Point> OriginalKeySensors { get; internal set; }
         public HashSet<Point> KeySensors { get; private set; }
-        public ImmutableHashSet<Point> OriginalGuns { get; private set; }
+        public ImmutableHashSet<Point> OriginalGuns { get; internal set; }
         public HashSet<Point> Guns { get; private set; }
         public ImmutableDictionary<Point, string> Decorations { get; private set; }
         public Point? MonsterCoords { get; internal set; }
-        public Point? MonsterStart { get; private set; }
-        public float? MonsterWait { get; private set; }
+        public Point? MonsterStart { get; internal set; }
+        public float? MonsterWait { get; internal set; }
         public HashSet<Point> PlayerFlags { get; private set; }
         public bool Won { get; internal set; }
         public bool Killed { get; internal set; }

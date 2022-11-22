@@ -79,7 +79,10 @@ namespace CSMaze
             {
                 // Positions are sent as integers with 2 d.p of accuracy from the original float.
                 byte[] bytes = new byte[ByteSize];
-                _ = Encoding.ASCII.GetBytes(Name, bytes.AsSpan()[..^24]);
+                if (Name.Length > 0)
+                {
+                    _ = Encoding.ASCII.GetBytes(Name, bytes.AsSpan()[..^24]);
+                }
                 Array.Copy(Pos.ToByteArray(), 0, bytes, 24, Coords.ByteSize);
                 bytes[32] = Skin;
                 BinaryPrimitives.WriteUInt16BigEndian(bytes.AsSpan()[33..35], Kills);

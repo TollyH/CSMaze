@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using SDL2;
 using System.Drawing;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
@@ -54,7 +55,7 @@ namespace CSMaze
             // This prevents issues with required files not being found.
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
-            bool isMulti = false;
+            bool isMulti = multiplayerServer is not null;
             bool isCoop = false;
 
             DateTime lastConfigEdit = File.GetLastWriteTime(configIniPath);
@@ -63,23 +64,63 @@ namespace CSMaze
 
             IntPtr window = SDL.SDL_CreateWindow("PyMaze - Loading", SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, cfg.ViewportWidth, cfg.ViewportHeight, 0);
 
-            int currentLevel;
-            byte[] playerKey;
-            UdpClient? sock;
-            IPEndPoint? addr;
+            bool quit = false;
+
+            int currentLevel = 0;
+            byte[]? playerKey = null;
+            UdpClient? sock = null;
+            IPEndPoint? addr = null;
             if (isMulti)
             {
-                throw new NotImplementedException();
+                (byte[], int, bool)? joinResponse = null;
+                try
+                {
+                    sock = NetCode.CreateClientSocket();
+                    addr = NetCode.GetHostPort(multiplayerServer!);
+                    multiplayerName ??= "Unnamed";
+                    int retries = 0;
+                    while (joinResponse is null && retries < 10)
+                    {
+                        joinResponse = NetCode.JoinServer(sock, addr, multiplayerName);
+                        retries++;
+                        Thread.Sleep(500);
+                    }
+                    if (joinResponse is null)
+                    {
+                        _ = System.Windows.MessageBox.Show("Could not connect to server", "Connection error",
+                            System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                        quit = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    _ = System.Windows.MessageBox.Show("Invalid server information provided", "Connection error",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    quit = true;
+                }
+                if (!quit)
+                {
+                    (playerKey, currentLevel, isCoop) = joinResponse!.Value;
+                    if (!isCoop)
+                    {
+                        Level lvl = levels[currentLevel];
+                        lvl.RandomisePlayerCoords();
+                        // Remove pickups and monsters from deathmatches.
+                        lvl.OriginalExitKeys = lvl.OriginalExitKeys.Clear();
+                        lvl.ExitKeys.Clear();
+                        lvl.OriginalKeySensors = lvl.OriginalKeySensors.Clear();
+                        lvl.KeySensors.Clear();
+                        lvl.OriginalGuns = lvl.OriginalGuns.Clear();
+                        lvl.Guns.Clear();
+                        lvl.MonsterStart = null;
+                        lvl.MonsterWait = null;
+                        lvl.EndPoint = new Point(-1, -1);  // Make end inaccessible in deathmatches
+                        lvl.StartPoint = new Point(-1, -1);  // Hide start point in deathmatches
+                    }
+                }
             }
-            else
-            {
-                currentLevel = 0;
-                // Not needed in single player
-                playerKey = Array.Empty<byte>();
-                sock = null;
-                addr = null;
-            }
-            List<NetData.Player> otherPlayers = new();
+            NetData.Player[] otherPlayers = Array.Empty<NetData.Player>();
             float timeSinceServerPing = 0;
             byte hitsRemaining = 1;  // This will be updated later
             byte lastKillerSkin = 0;  // This will be updated later
@@ -171,7 +212,6 @@ namespace CSMaze
             ulong renderStart = 0;
             ulong renderEnd = 0;
             float frameTime;
-            bool quit = false;
 
             _ = SDL_mixer.Mix_PlayMusic(resources.Music, -1);
 
@@ -192,7 +232,19 @@ namespace CSMaze
                     }
                     if (isMulti)
                     {
-                        throw new NotImplementedException();
+                        ShotResponse? response = NetCode.FireGun(sock!, addr!, playerKey!, levels[currentLevel].PlayerCoords, facingDirections[currentLevel]);
+                        if (!isCoop && response is ShotResponse.HitNoKill or ShotResponse.Killed)
+                        {
+                            pickupFlashTimeRemaining = 0.4f;
+                        }
+                        if (response is not null or ShotResponse.Denied)
+                        {
+                            _ = SDL_mixer.Mix_PlayChannel(-1, resources.GunshotSound, 0);
+                        }
+                        if (isCoop)
+                        {
+                            hasGun[currentLevel] = false;
+                        }
                     }
                     else
                     {
@@ -216,7 +268,47 @@ namespace CSMaze
                 }
                 if (isMulti)
                 {
-                    throw new NotImplementedException();
+                    timeSinceServerPing += frameTime;
+                    if (timeSinceServerPing >= 0.04)
+                    {
+                        timeSinceServerPing = 0;
+                        if (!isCoop)
+                        {
+                            (byte, byte, ushort, ushort, NetData.Player[])? pingResponse = NetCode.PingServer(sock!, addr!, playerKey!, levels[currentLevel].PlayerCoords);
+                            if (pingResponse is not null)
+                            {
+                                int previousHits = hitsRemaining;
+                                (hitsRemaining, lastKillerSkin, kills, deaths, otherPlayers) = pingResponse.Value;
+                                if (hitsRemaining < previousHits)
+                                {
+                                    _ = SDL_mixer.Mix_PlayChannel(-1, resources.PlayerHitSound, 0);
+                                    hurtFlashTimeRemaining = 1 / (hitsRemaining + 1f);
+                                }
+                                if (hitsRemaining == 0)
+                                {
+                                    levels[currentLevel].Killed = true;
+                                }
+                                if (levels[currentLevel].Killed && hitsRemaining != 0)
+                                {
+                                    // We were dead, but server has processed our respawn.
+                                    levels[currentLevel].Killed = false;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            (bool, Point ?, NetData.Player[], HashSet<Point>)? pingResponse = NetCode.PingServerCoop(sock!, addr!, playerKey!, levels[currentLevel].PlayerCoords);
+                            if (pingResponse is not null)
+                            {
+                                Level lvl = levels[currentLevel];
+                                (lvl.Killed, lvl.MonsterCoords, otherPlayers, HashSet<Point> pickedUpItems) = pingResponse.Value;
+                                // Remove items no longer present on the server
+                                lvl.ExitKeys.IntersectWith(pickedUpItems);
+                                lvl.KeySensors.IntersectWith(pickedUpItems);
+                                lvl.Guns.IntersectWith(pickedUpItems);
+                            }
+                        }
+                    }
                 }
                 while (SDL.SDL_PollEvent(out SDL.SDL_Event evn) != 0)
                 {
@@ -225,7 +317,7 @@ namespace CSMaze
                         quit = true;
                         if (isMulti)
                         {
-                            throw new NotImplementedException();
+                            NetCode.LeaveServer(sock!, addr!, playerKey!);
                         }
                     }
                     // Standard "press-once" keys
@@ -241,7 +333,8 @@ namespace CSMaze
                         }
                         else if (isMulti && !isCoop && levels[currentLevel].Killed)
                         {
-                            throw new NotImplementedException();
+                            NetCode.Respawn(sock!, addr!, playerKey!);
+                            levels[currentLevel].RandomisePlayerCoords();
                         }
                         else if (!isResetPromptShown)
                         {

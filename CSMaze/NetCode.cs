@@ -14,7 +14,8 @@ namespace CSMaze
         /// </summary>
         public static IPEndPoint GetHostPort(string str)
         {
-            return new IPEndPoint(IPAddress.Parse(str.Split(":", 1)[0]), int.Parse(str.Split(":", 1)[1]));
+            string[] split = str.Split(":", 2);
+            return new IPEndPoint(IPAddress.Parse(split[0]), int.Parse(split[1]));
         }
 
         /// <summary>
@@ -43,8 +44,7 @@ namespace CSMaze
             Array.Copy(coordBytes, 0, toSend, 33, NetData.Coords.ByteSize);
             try
             {
-                sock.Connect(addr);
-                _ = sock.Send(toSend);
+                _ = sock.Send(toSend, 33 + NetData.Coords.ByteSize, addr);
                 byte[] playerListBytes = sock.Receive(ref addr);
                 byte hitsRemaining = playerListBytes[0];
                 byte lastKillerSkin = playerListBytes[1];
@@ -62,14 +62,6 @@ namespace CSMaze
             {
                 return null;
             }
-            finally
-            {
-                try
-                {
-                    sock.Close();
-                }
-                catch { }
-            }
         }
 
         /// <summary>
@@ -86,8 +78,7 @@ namespace CSMaze
             Array.Copy(coordBytes, 0, toSend, 33, NetData.Coords.ByteSize);
             try
             {
-                sock.Connect(addr);
-                _ = sock.Send(toSend);
+                _ = sock.Send(toSend, 33 + NetData.Coords.ByteSize, addr);
                 byte[] playerListBytes = sock.Receive(ref addr);
                 bool killed = playerListBytes[0] != 0;
                 int coordsSize = NetData.Coords.ByteSize;
@@ -117,14 +108,6 @@ namespace CSMaze
             {
                 return null;
             }
-            finally
-            {
-                try
-                {
-                    sock.Close();
-                }
-                catch { }
-            }
         }
 
         /// <summary>
@@ -137,25 +120,19 @@ namespace CSMaze
             // Player key is all 0 here as we don't have one yet, but all requests still need to have one.
             byte[] toSend = new byte[56];
             toSend[0] = (byte)RequestType.Join;
-            _ = Encoding.ASCII.GetBytes(name.ToCharArray(), 0, 24, toSend, 1);
+            if (name.Length > 0)
+            {
+                _ = Encoding.ASCII.GetBytes(name.ToCharArray(), 0, Math.Min(24, name.Length), toSend, 1);
+            }
             try
             {
-                sock.Connect(addr);
-                _ = sock.Send(toSend);
+                _ = sock.Send(toSend, 56, addr);
                 byte[] receivedBytes = sock.Receive(ref addr);
                 return (receivedBytes[..32], receivedBytes[32], receivedBytes[33] != 0);
             }
             catch (SocketException)
             {
                 return null;
-            }
-            finally
-            {
-                try
-                {
-                    sock.Close();
-                }
-                catch { }
             }
         }
 
@@ -174,22 +151,13 @@ namespace CSMaze
             Array.Copy(facingBytes, 0, toSend, 33 + NetData.Coords.ByteSize, NetData.Coords.ByteSize);
             try
             {
-                sock.Connect(addr);
-                _ = sock.Send(toSend);
+                _ = sock.Send(toSend, 33 + (NetData.Coords.ByteSize * 2), addr);
                 byte[] receivedBytes = sock.Receive(ref addr);
                 return (ShotResponse)receivedBytes[0];
             }
             catch (SocketException)
             {
                 return null;
-            }
-            finally
-            {
-                try
-                {
-                    sock.Close();
-                }
-                catch { }
             }
         }
 
@@ -203,18 +171,9 @@ namespace CSMaze
                 byte[] toSend = new byte[33];
                 toSend[0] = (byte)RequestType.Respawn;
                 Array.Copy(playerKey, 0, toSend, 1, 32);
-                sock.Connect(addr);
-                _ = sock.Send(toSend);
+                _ = sock.Send(toSend, 33, addr);
             }
             catch (SocketException) { }
-            finally
-            {
-                try
-                {
-                    sock.Close();
-                }
-                catch { }
-            }
         }
 
         /// <summary>
@@ -227,18 +186,9 @@ namespace CSMaze
                 byte[] toSend = new byte[33];
                 toSend[0] = (byte)RequestType.Leave;
                 Array.Copy(playerKey, 0, toSend, 1, 32);
-                sock.Connect(addr);
-                _ = sock.Send(toSend);
+                _ = sock.Send(toSend, 33, addr);
             }
             catch (SocketException) { }
-            finally
-            {
-                try
-                {
-                    sock.Close();
-                }
-                catch { }
-            }
         }
     }
 }

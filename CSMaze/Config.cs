@@ -1,5 +1,6 @@
 ﻿using IniParser;
 using IniParser.Model;
+using System.IO;
 
 namespace CSMaze
 {

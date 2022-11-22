@@ -4,7 +4,7 @@
     {
         static void Main(string[] args)
         {
-            MazeGame.Maze();
+            MazeGame.Maze(multiplayerServer: "127.0.0.1:13375");
         }
     }
 }
