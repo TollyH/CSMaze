@@ -156,14 +156,7 @@ namespace CSMaze
             if (File.Exists("highscores.json"))
             {
                 (float, float)[]? deserialized = JsonConvert.DeserializeObject<(float, float)[]>(File.ReadAllText("highscores.json"));
-                if (deserialized is not null)
-                {
-                    highscores = deserialized;
-                }
-                else
-                {
-                    highscores = new (float, float)[levels.Length];
-                }
+                highscores = deserialized is not null ? deserialized : (new (float, float)[levels.Length]);
             }
             else
             {

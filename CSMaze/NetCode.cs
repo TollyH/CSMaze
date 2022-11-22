@@ -143,7 +143,7 @@ namespace CSMaze
         public static ShotResponse? FireGun(UdpClient sock, IPEndPoint addr, byte[] playerKey, Vector2 coords, Vector2 facing)
         {
             byte[] coordBytes = new NetData.Coords(coords.X, coords.Y).ToByteArray();
-            byte[] facingBytes = new NetData.Coords(coords.X, coords.Y).ToByteArray();
+            byte[] facingBytes = new NetData.Coords(facing.X, facing.Y).ToByteArray();
             byte[] toSend = new byte[33 + (NetData.Coords.ByteSize * 2)];
             toSend[0] = (byte)RequestType.Fire;
             Array.Copy(playerKey, 0, toSend, 1, 32);
