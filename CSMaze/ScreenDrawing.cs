@@ -693,7 +693,7 @@ namespace CSMaze
             for (int i = 0; i < sortedPlayers.Count; i++)
             {
                 NetData.Player plr = sortedPlayers[i];
-                int lineY = (33 * i) + 65;
+                int lineY = (33 * i) + 100;
 
                 IntPtr nameTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, plr.Name, Blue.ToSDL(false));
                 IntPtr nameText = SDL.SDL_CreateTextureFromSurface(screen, nameTextSfc);
