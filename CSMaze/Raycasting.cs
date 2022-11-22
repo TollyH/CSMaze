@@ -196,7 +196,7 @@ namespace CSMaze
                             if (player.GridPos == currentTile)
                             {
                                 Vector2 playerPos = new(player.Pos.XPos, player.Pos.YPos);
-                                sprites.Add(new SpriteCollision(playerPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, playerPos + (direction * distance)),
+                                sprites.Add(new SpriteCollision(playerPos, currentTile, NoSqrtCoordDistance(currentLevel.PlayerCoords, currentLevel.PlayerCoords + (direction * distance)),
                                     SpriteType.OtherPlayer, index));
                             }
                             index++;
