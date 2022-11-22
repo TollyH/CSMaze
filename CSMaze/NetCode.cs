@@ -122,7 +122,7 @@ namespace CSMaze
             toSend[0] = (byte)RequestType.Join;
             if (name.Length > 0)
             {
-                _ = Encoding.ASCII.GetBytes(name.ToCharArray(), 0, Math.Min(24, name.Length), toSend, 1);
+                _ = Encoding.ASCII.GetBytes(name.ToCharArray(), 0, Math.Min(24, name.Length), toSend, 33);
             }
             try
             {

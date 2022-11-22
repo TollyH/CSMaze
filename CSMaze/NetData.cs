@@ -68,7 +68,7 @@ namespace CSMaze
 
             public Player(byte[] playerBytes)
             {
-                Name = Encoding.ASCII.GetString(playerBytes[..^24].TakeWhile(x => x != 0).ToArray());
+                Name = Encoding.ASCII.GetString(playerBytes[..24].TakeWhile(x => x != 0).ToArray());
                 Pos = new Coords(playerBytes[24..32]);
                 Skin = playerBytes[32];
                 Kills = BinaryPrimitives.ReadUInt16BigEndian(playerBytes.AsSpan()[33..35]);
@@ -81,7 +81,7 @@ namespace CSMaze
                 byte[] bytes = new byte[ByteSize];
                 if (Name.Length > 0)
                 {
-                    _ = Encoding.ASCII.GetBytes(Name, bytes.AsSpan()[..^24]);
+                    _ = Encoding.ASCII.GetBytes(Name, bytes.AsSpan()[..24]);
                 }
                 Array.Copy(Pos.ToByteArray(), 0, bytes, 24, Coords.ByteSize);
                 bytes[32] = Skin;
