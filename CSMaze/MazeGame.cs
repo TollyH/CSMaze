@@ -43,9 +43,12 @@ namespace CSMaze
         /// <summary>
         /// Main function for the maze game. Manages all input, output, and timing.
         /// </summary>
-        public static void Maze(string levelJsonPath = "maze_levels.json", string configIniPath = "config.ini",
+        public static void Maze(string? levelJsonPath = "maze_levels.json", string? configIniPath = "config.ini",
             string? multiplayerServer = null, string? multiplayerName = null)
         {
+            levelJsonPath ??= "maze_levels.json";
+            configIniPath ??= "config.ini";
+
             _ = SDL.SDL_Init(SDL.SDL_INIT_EVERYTHING);
             _ = SDL_ttf.TTF_Init();
             _ = SDL_mixer.Mix_Init(0);
