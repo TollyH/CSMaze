@@ -118,7 +118,7 @@ namespace CSMaze
         public static (byte[], int, bool)? JoinServer(UdpClient sock, IPEndPoint addr, string name)
         {
             // Player key is all 0 here as we don't have one yet, but all requests still need to have one.
-            byte[] toSend = new byte[56];
+            byte[] toSend = new byte[57];
             toSend[0] = (byte)RequestType.Join;
             if (name.Length > 0)
             {
@@ -126,7 +126,7 @@ namespace CSMaze
             }
             try
             {
-                _ = sock.Send(toSend, 56, addr);
+                _ = sock.Send(toSend, 57, addr);
                 byte[] receivedBytes = sock.Receive(ref addr);
                 return (receivedBytes[..32], receivedBytes[32], receivedBytes[33] != 0);
             }
