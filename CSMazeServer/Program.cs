@@ -1,4 +1,4 @@
-﻿namespace CSMaze
+﻿namespace CSMaze.Server
 {
     internal class Program
     {

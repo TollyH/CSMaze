@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CSMaze
+namespace CSMaze.Server
 {
     public static class Server
     {
@@ -17,11 +17,11 @@ namespace CSMaze
         /// Launches the server required for playing multiplayer games. Stores and provides player locations, health status,
         /// and does collision checking for gun fires.
         /// </summary>
-        public static void MazeServer(string? levelJsonPath = "maze_levels.json", int? port = 13375, int? level = 1, bool? coop = false)
+        public static void MazeServer(string? levelJsonPath = "maze_levels.json", int? port = 13375, int? level = 0, bool? coop = false)
         {
             levelJsonPath ??= "maze_levels.json";
             port ??= 13375;
-            level ??= 1;
+            level ??= 0;
             coop ??= false;
 
             // Change working directory to the directory where the script is located.
@@ -37,8 +37,8 @@ namespace CSMaze
                 _ = currentLevel.MoveMonster(true);
             }
             DateTime lastMonsterMove = DateTime.Now;
-            Dictionary<byte[], NetData.PrivatePlayer> players = new(new Extensions.ByteArrayComparer());
-            Dictionary<byte[], DateTime> lastFireTime = new(new Extensions.ByteArrayComparer());
+            Dictionary<byte[], NetData.PrivatePlayer> players = new(new ByteArrayComparer());
+            Dictionary<byte[], DateTime> lastFireTime = new(new ByteArrayComparer());
 
             UdpClient sock = new();
             sock.Client.SendTimeout = 100;
@@ -137,12 +137,83 @@ namespace CSMaze
                                 toSend[33] = coop.Value ? (byte)1 : (byte)0;
                                 _ = sock.Send(toSend, 34, endPoint);
                             }
+                            else
+                            {
+                                Console.WriteLine($"Rejected player join from {endPoint} as server is full");
+                            }
                             break;
                         case RequestType.Fire:
+                            if (DateTime.Now - lastFireTime.GetValueOrDefault(playerKey, DateTime.MinValue) < shotTimeout && !coop.Value)
+                            {
+                                Console.WriteLine($"Will not allow {endPoint} to shoot, firing too quickly");
+                                _ = sock.Send(new byte[1] { (byte)ShotResponse.Denied }, 1, endPoint);
+                            }
+                            else
+                            {
+                                lastFireTime[playerKey] = DateTime.Now;
+                                NetData.Coords coords = new(data[33..41]);
+                                NetData.Coords facing = new(data[41..49]);
+                                // Set these just for the raycasting function to work
+                                _ = currentLevel.MovePlayer(coords.ToVector2(), false, false, false, true);
+                                List<KeyValuePair<byte[], NetData.PrivatePlayer>> playerList = coop.Value ? new List<KeyValuePair<byte[], NetData.PrivatePlayer>>()
+                                    : players.Where(x => x.Value.HitsRemaining > 0 && !Enumerable.SequenceEqual(x.Key, playerKey)).ToList();
+                                (_, Raycasting.SpriteCollision[] hitSprites) = Raycasting.GetFirstCollision(currentLevel, facing.ToVector2(), false,
+                                    playerList.Select(x => (NetData.Player)x.Value).ToList());
+                                bool hit = false;
+                                foreach (Raycasting.SpriteCollision sprite in hitSprites)
+                                {
+                                    if (sprite.Type == SpriteType.OtherPlayer && !coop.Value)
+                                    {
+                                        // Player was hit by gun
+                                        (byte[] hitKey, NetData.PrivatePlayer hitPlayer) = playerList[sprite.PlayerIndex!.Value];
+                                        if (hitPlayer.HitsRemaining > 0)
+                                        {
+                                            hit = true;
+                                            hitPlayer.HitsRemaining--;
+                                            if (hitPlayer.HitsRemaining <= 0)
+                                            {
+                                                hitPlayer.LastKillerSkin = players[playerKey].Skin;
+                                                hitPlayer.Deaths++;
+                                                players[playerKey].Kills++;
+                                                // Hide dead players in level
+                                                hitPlayer.Pos = new NetData.Coords(-1, -1);
+                                                _ = sock.Send(new byte[1] { (byte)ShotResponse.Killed }, 1, endPoint);
+                                            }
+                                            else
+                                            {
+                                                _ = sock.Send(new byte[1] { (byte)ShotResponse.HitNoKill }, 1, endPoint);
+                                            }
+                                        }
+                                        break;
+                                    }
+                                    else if (sprite.Type == SpriteType.Monster && coop.Value)
+                                    {
+                                        // Monster was hit by gun
+                                        hit = true;
+                                        currentLevel.MonsterCoords = null;
+                                        _ = sock.Send(new byte[1] { (byte)ShotResponse.Killed }, 1, endPoint);
+                                        break;
+                                    }
+                                }
+                                if (!hit)
+                                {
+                                    _ = sock.Send(new byte[1] { (byte)ShotResponse.Missed }, 1, endPoint);
+                                }
+                            }
                             break;
                         case RequestType.Respawn:
+                            if (players[playerKey].HitsRemaining <= 0)
+                            {
+                                players[playerKey].HitsRemaining = shotsUntilDead;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Will not respawn from {endPoint} as player isn't dead");
+                            }
                             break;
                         case RequestType.Leave:
+                            Console.WriteLine($"Player left from {endPoint}");
+                            _ = players.Remove(playerKey);
                             break;
                         default:
                             Console.WriteLine($"Invalid request type from {endPoint}");

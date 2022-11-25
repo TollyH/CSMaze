@@ -48,7 +48,7 @@ namespace CSMaze
         public ImmutableHashSet<Point> OriginalGuns { get; internal set; }
         public HashSet<Point> Guns { get; private set; }
         public ImmutableDictionary<Point, string> Decorations { get; private set; }
-        public Point? MonsterCoords { get; internal set; }
+        public Point? MonsterCoords { get; set; }
         public Point? MonsterStart { get; internal set; }
         public float? MonsterWait { get; internal set; }
         public HashSet<Point> PlayerFlags { get; private set; }
@@ -293,6 +293,7 @@ namespace CSMaze
         /// which may be empty if nothing changed. All events are included, so for
         /// example if MovedGridDiagonally is returned, Moved will also be.
         /// </returns>
+        /// <param name="multiplayer">This should only be set to true if being called by a server or by <see cref="RandomisePlayerCoords"/></param>
         public HashSet<MoveEvent> MovePlayer(Vector2 vector, bool hasGun, bool relative, bool collisionCheck, bool multiplayer = false)
         {
             HashSet<MoveEvent> events = new();
@@ -344,29 +345,32 @@ namespace CSMaze
 
             PlayerCoords = target;
             _ = events.Add(MoveEvent.Moved);
-            if (ExitKeys.Remove(gridPos))
+            if (!multiplayer)
             {
-                _ = events.Add(MoveEvent.PickedUpKey);
-                _ = events.Add(MoveEvent.Pickup);
-            }
-            if (KeySensors.Remove(gridPos))
-            {
-                _ = events.Add(MoveEvent.PickedUpKeySensor);
-                _ = events.Add(MoveEvent.Pickup);
-            }
-            if (!hasGun && Guns.Remove(gridPos))
-            {
-                _ = events.Add(MoveEvent.PickedUpGun);
-                _ = events.Add(MoveEvent.Pickup);
-            }
-            if (MonsterCoords == gridPos)
-            {
-                _ = events.Add(MoveEvent.MonsterCaught);
-            }
-            else if (EndPoint == gridPos && ExitKeys.Count == 0)
-            {
-                Won = true;
-                _ = events.Add(MoveEvent.Won);
+                if (ExitKeys.Remove(gridPos))
+                {
+                    _ = events.Add(MoveEvent.PickedUpKey);
+                    _ = events.Add(MoveEvent.Pickup);
+                }
+                if (KeySensors.Remove(gridPos))
+                {
+                    _ = events.Add(MoveEvent.PickedUpKeySensor);
+                    _ = events.Add(MoveEvent.Pickup);
+                }
+                if (!hasGun && Guns.Remove(gridPos))
+                {
+                    _ = events.Add(MoveEvent.PickedUpGun);
+                    _ = events.Add(MoveEvent.Pickup);
+                }
+                if (MonsterCoords == gridPos)
+                {
+                    _ = events.Add(MoveEvent.MonsterCaught);
+                }
+                else if (EndPoint == gridPos && ExitKeys.Count == 0)
+                {
+                    Won = true;
+                    _ = events.Add(MoveEvent.Won);
+                }
             }
             return events;
         }
