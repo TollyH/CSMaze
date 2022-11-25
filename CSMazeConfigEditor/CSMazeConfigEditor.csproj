@@ -8,7 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="config.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CSMaze\CSMaze.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="config.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

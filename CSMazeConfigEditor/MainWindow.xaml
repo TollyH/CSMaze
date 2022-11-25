@@ -5,8 +5,87 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CSMaze.ConfigEditor"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="CSMaze Config" Icon="config.ico" SizeToContent="WidthAndHeight">
+    <Grid Margin="5">
+        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="Be aware that some settings may not work properly or cause issues until after restarting the game" Foreground="Red" Padding="0,0,0,0"/>
+        <TabControl Margin="0,25,0,0">
+            <TabItem Header="Basic">
+                <StackPanel>
+                    <Label x:Name="viewportWidthLabel" Content="View Width — (xxx)" Tag="View Width"/>
+                    <Slider x:Name="viewportWidthSlider" Minimum="500" Maximum="3840" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="VIEWPORT_WIDTH" HeaderLabel="{Binding ElementName=viewportWidthLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                    <Label x:Name="viewportHeightLabel" Content="View Height — (xxx)" Tag="View Height"/>
+                    <Slider x:Name="viewportHeightSlider" Minimum="500" Maximum="2160" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="VIEWPORT_HEIGHT" HeaderLabel="{Binding ElementName=viewportHeightLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                    <CheckBox x:Name="cheatMapCheck" Content="Enable the cheat map" Margin="0,10,0,5" Click="Check_Click" Tag="ENABLE_CHEAT_MAP"/>
+                    <CheckBox x:Name="monsterCheck" Content="Enable the monster" Margin="0,5,0,5" Click="Check_Click" Tag="MONSTER_ENABLED"/>
+                    <CheckBox x:Name="monsterKillSoundCheck" Content="Play the jumpscare sound on death" Margin="0,5,0,5" Click="Check_Click" Tag="MONSTER_SOUND_ON_KILL"/>
+                    <CheckBox x:Name="monsterSpotSoundCheck" Content="Play a jumpscare sound when the monster is spotted" Margin="0,5,0,5" Click="Check_Click" Tag="MONSTER_SOUND_ON_SPOT"/>
+                    <CheckBox x:Name="monsterFlickerLightsCheck" Content="Flicker lights based on distance to the monster" Margin="0,5,0,5" Click="Check_Click" Tag="MONSTER_FLICKER_LIGHTS"/>
+                    <CheckBox x:Name="monsterSoundRoamingCheck" Content="Play random monster roaming sounds" Margin="0,5,0,10" Click="Check_Click" Tag="MONSTER_SOUND_ROAMING"/>
+                    <Label x:Name="compassTimeLabel" Content="Time before compass burnout (seconds) — (xxx)" Tag="Time before compass burnout (seconds)"/>
+                    <Slider x:Name="compassTimeSlider" Minimum="1" Maximum="60" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="COMPASS_TIME" HeaderLabel="{Binding ElementName=compassTimeLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                    <Label x:Name="monsterTimeToEscapeLabel" Content="Total time to escape monster per level (seconds) — (xxx)" Tag="Total time to escape monster per level (seconds)"/>
+                    <Slider x:Name="monsterTimeToEscapeSlider" Minimum="1" Maximum="30" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="MONSTER_TIME_TO_ESCAPE" HeaderLabel="{Binding ElementName=monsterTimeToEscapeLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                    <Label x:Name="monsterPressesToEscapeLabel" Content="Total key presses to escape monster — (xxx)" Tag="Total key presses to escape monster"/>
+                    <Slider x:Name="monsterPressesToEscapeSlider" Minimum="0" Maximum="60" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="MONSTER_PRESSES_TO_ESCAPE" HeaderLabel="{Binding ElementName=monsterPressesToEscapeLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                    <Label x:Name="keySensorTimeLabel" Content="Time key sensor lasts after pickup (seconds) — (xxx)" Tag="Time key sensor lasts after pickup (seconds)"/>
+                    <Slider x:Name="keySensorTimeSlider" Minimum="1" Maximum="60" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="KEY_SENSOR_TIME" HeaderLabel="{Binding ElementName=keySensorTimeLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                    <Label x:Name="playerWallTimeLabel" Content="Amount of time before player placed walls break (seconds) — (xxx)" Tag="Amount of time before player placed walls break (seconds)"/>
+                    <Slider x:Name="playerWallTimeSlider" Minimum="1" Maximum="120" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="PLAYER_WALL_TIME" HeaderLabel="{Binding ElementName=playerWallTimeLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                    <Label x:Name="playerWallCooldownLabel" Content="Cooldown before player can place another wall (seconds) — (xxx)" Tag="Cooldown before player can place another wall (seconds)"/>
+                    <Slider x:Name="playerWallCooldownSlider" Minimum="1" Maximum="120" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="PLAYER_WALL_COOLDOWN" HeaderLabel="{Binding ElementName=playerWallCooldownLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                    <CheckBox x:Name="texturesCheck" Content="Display textures on walls (impacts performance heavily)" Margin="0,10,0,5" Click="Check_Click" Tag="TEXTURES_ENABLED"/>
+                    <CheckBox x:Name="skyTexturesCheck" Content="Display textured sky (impacts performance)" Margin="0,5,0,10" Click="Check_Click" Tag="SKY_TEXTURES_ENABLED"/>
+                    <Label x:Name="fogStrengthLabel" Content="Fog strength (lower is stronger, 0 is disabled) — (xxx)" Tag="Fog strength (lower is stronger, 0 is disabled)"/>
+                    <Slider x:Name="fogStrengthSlider" Minimum="0" Maximum="20" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="FOG_STRENGTH" HeaderLabel="{Binding ElementName=fogStrengthLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                    <Label x:Name="turnSpeedLabel" Content="Turn Sensitivity — (xxx)" Tag="Turn Sensitivity"/>
+                    <Slider x:Name="turnSpeedSlider" Minimum="1" Maximum="120" ValueChanged="Slider_ValueChanged">
+                        <Slider.Tag>
+                            <local:ControlTag ConfigOption="TURN_SPEED" HeaderLabel="{Binding ElementName=turnSpeedLabel, Mode=OneWay}"/>
+                        </Slider.Tag>
+                    </Slider>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Advanced">
+                <StackPanel>
 
+                </StackPanel>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

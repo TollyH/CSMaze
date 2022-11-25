@@ -24,5 +24,15 @@ namespace CSMaze.ConfigEditor
         {
             InitializeComponent();
         }
+
+        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+
+        }
+
+        private void Check_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
