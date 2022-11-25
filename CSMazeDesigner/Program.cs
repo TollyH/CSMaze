@@ -1,4 +1,4 @@
-﻿namespace CSMazeDesigner
+﻿namespace CSMaze.Designer
 {
     internal class Program
     {

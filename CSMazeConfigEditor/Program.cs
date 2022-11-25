@@ -1,4 +1,4 @@
-﻿namespace CSMazeConfigEditor
+﻿namespace CSMaze.ConfigEditor
 {
     internal class Program
     {
