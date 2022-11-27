@@ -111,8 +111,8 @@ namespace CSMaze.Designer
                 undoStack.Clear();
                 undoButton.IsEnabled = false;
                 unsavedChanges = false;
-                // TODO: UpdateLevelList()
-                // TODO: UpdateMapCanvas()
+                UpdateLevelList();
+                UpdateMapCanvas();
                 // TODO: UpdatePropertiesPanel()
             }
             catch (Exception exc)
@@ -134,7 +134,8 @@ namespace CSMaze.Designer
                 SaveFileDialog dialog = new()
                 {
                     AddExtension = true,
-                    DefaultExt = "JSON files|*.json",
+                    Filter = "JSON files|*.json",
+                    DefaultExt = ".json",
                     InitialDirectory = AppDomain.CurrentDomain.BaseDirectory
                 };
                 bool? result = dialog.ShowDialog();
