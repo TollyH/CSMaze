@@ -56,7 +56,7 @@
             <Slider x:Name="zoomSlider" Orientation="Vertical" Minimum="0.01" Maximum="1" Value="1" ValueChanged="zoomSlider_ValueChanged"/>
         </StackPanel>
         <StackPanel Grid.Column="2" Margin="5">
-            <Border BorderBrush="Black" BorderThickness="1" Width="160" Height="160" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,2,0,2">
+            <Border BorderBrush="Black" BorderThickness="1" Width="175" Height="175" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,2,0,2">
                 <TextBlock x:Name="selectedSquareDescription" Text="Nothing is currently selected" TextWrapping="Wrap"/>
             </Border>
             <StackPanel x:Name="dimensionsPanel" Margin="0,2,0,2" Visibility="Collapsed">
@@ -88,6 +88,8 @@
                 </Grid>
                 <ComboBox x:Name="textureDropdown" Margin="0,2,0,2" SelectionChanged="textureDropdown_SelectionChanged"/>
                 <Image x:Name="texturePreview" Margin="0,2,0,2"/>
+            </StackPanel>
+            <StackPanel x:Name="edgeTexturesPanel" Margin="0,2,0,2" Visibility="Collapsed">
                 <Label Content="Default / Edge texture"/>
                 <ComboBox x:Name="edgeTextureDropdown" Margin="0,2,0,2" SelectionChanged="edgeTextureDropdown_SelectionChanged"/>
                 <Image x:Name="edgeTexturePreview" Margin="0,2,0,2"/>
