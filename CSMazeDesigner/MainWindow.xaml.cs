@@ -36,9 +36,10 @@ namespace CSMaze.Designer
         // Used to prevent methods from being called when programmatically setting widget values.
         private bool doUpdates = true;
 
-        private Dictionary<Tool, string> descriptions;
-        private Dictionary<string, Image> textures;
-        private Dictionary<string, Image> decorationTextures;
+        private Dictionary<Tool, string> descriptions = new();
+        private Dictionary<Tool, Button> toolButtons = new();
+        private Dictionary<string, Image> textures = new();
+        private Dictionary<string, Image> decorationTextures = new();
 
         public MainWindow() : this(null) { }
 
@@ -46,11 +47,45 @@ namespace CSMaze.Designer
         {
             cfg = new Config(configIniPath ?? "config.ini");
             InitializeComponent();
+            foreach (Button btn in toolButtonPanel.Children.OfType<Button>())
+            {
+                toolButtons[(Tool)btn.Tag] = btn;
+            }
+        }
+
+        /// <summary>
+        /// Change the currently selected tool and update buttons to match.
+        /// Silently fails if the specified tool does not exist.
+        /// </summary>
+        private void SelectTool(Tool newTool)
+        {
+            if (toolButtons.ContainsKey(newTool))
+            {
+                toolButtons[currentTool].IsEnabled = true;
+                currentTool = newTool;
+                toolButtons[currentTool].IsEnabled = false;
+            }
         }
 
         private void ToolButton_Click(object sender, RoutedEventArgs e)
         {
+            SelectTool((Tool)((Button)sender).Tag);
+        }
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.S)
+            {
+                SelectTool(currentTool + 1);
+            }
+            if (e.Key == Key.W)
+            {
+                SelectTool(currentTool - 1);
+            }
+            if (e.Key == Key.A)
+            {
+                // TODO: Bulk select walls
+            }
         }
     }
 

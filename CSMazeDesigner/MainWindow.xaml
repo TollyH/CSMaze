@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CSMaze.Designer"
         mc:Ignorable="d"
-        Title="Level Designer - No File" Icon="editor.ico" SizeToContent="WidthAndHeight">
+        Title="Level Designer - No File" Icon="editor.ico" SizeToContent="WidthAndHeight" KeyDown="Window_KeyDown">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -17,37 +17,37 @@
             <Button x:Name="toolSelect" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Select}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/select.png"/>
             </Button>
-            <Button x:Name="toolMove" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Move}">
+            <Button x:Name="toolMove" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Move}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/move.png"/>
             </Button>
-            <Button x:Name="toolWall" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Wall}">
+            <Button x:Name="toolWall" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Wall}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/wall.png"/>
             </Button>
-            <Button x:Name="toolCollisionPlayer" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.CollisionPlayer}">
+            <Button x:Name="toolCollisionPlayer" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.CollisionPlayer}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/collision_player.png"/>
             </Button>
-            <Button x:Name="toolCollisionMonster" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.CollisionMonster}">
+            <Button x:Name="toolCollisionMonster" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.CollisionMonster}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/collision_monster.png"/>
             </Button>
-            <Button x:Name="toolStart" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Start}">
+            <Button x:Name="toolStart" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Start}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/start.png"/>
             </Button>
-            <Button x:Name="toolEnd" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.End}">
+            <Button x:Name="toolEnd" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.End}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/end.png"/>
             </Button>
-            <Button x:Name="toolKey" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Key}">
+            <Button x:Name="toolKey" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Key}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/key.png"/>
             </Button>
-            <Button x:Name="toolSensor" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Sensor}">
+            <Button x:Name="toolSensor" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Sensor}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/sensor.png"/>
             </Button>
-            <Button x:Name="toolGun" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Gun}">
+            <Button x:Name="toolGun" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Gun}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/gun.png"/>
             </Button>
-            <Button x:Name="toolMonster" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Monster}">
+            <Button x:Name="toolMonster" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Monster}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/monster.png"/>
             </Button>
-            <Button x:Name="toolDecoration" Width="30" Height="30" IsEnabled="False" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Decoration}">
+            <Button x:Name="toolDecoration" Width="30" Height="30" Click="ToolButton_Click" Margin="0,2,0,2" Tag="{x:Static local:Tool.Decoration}">
                 <Image Source="pack://siteoforigin:,,,/designer_icons/decoration.png"/>
             </Button>
         </StackPanel>
