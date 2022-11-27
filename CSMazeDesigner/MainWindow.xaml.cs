@@ -87,6 +87,86 @@ namespace CSMaze.Designer
                 // TODO: Bulk select walls
             }
         }
+
+        private void mapCanvas_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+
+        }
+
+        private void mapCanvas_MouseMove(object sender, MouseEventArgs e)
+        {
+
+        }
+
+        private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+
+        }
+
+        private void DimensionSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+
+        }
+
+        private void monsterWaitSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+
+        }
+
+        private void textureDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void edgeTextureDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void decorationTextureDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void undoButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void openButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void saveButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void saveAsButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void levelAddButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void levelDeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void levelMoveUpButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void levelMoveDownButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
     public enum Tool

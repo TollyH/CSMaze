@@ -51,5 +51,67 @@
                 <Image Source="pack://siteoforigin:,,,/designer_icons/decoration.png"/>
             </Button>
         </StackPanel>
+        <StackPanel Grid.Column="1" Margin="5" Orientation="Horizontal">
+            <Canvas x:Name="mapCanvas" Width="500" Height="500" MouseDown="mapCanvas_MouseDown" MouseMove="mapCanvas_MouseMove"/>
+            <Slider x:Name="zoomSlider" Orientation="Vertical" Minimum="0.01" Maximum="1" Value="1" ValueChanged="zoomSlider_ValueChanged"/>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Margin="5">
+            <Border BorderBrush="Black" BorderThickness="1" Width="160" Height="160" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,2,0,2">
+                <TextBlock x:Name="selectedSquareDescription" Text="Nothing is currently selected" TextWrapping="Wrap"/>
+            </Border>
+            <StackPanel x:Name="dimensionsPanel" Margin="0,2,0,2" Visibility="Collapsed">
+                <Label x:Name="widthDimensionLabel" Content="Level width — (xx)"/>
+                <Slider x:Name="widthDimensionSlider" Minimum="2" Maximum="50" ValueChanged="DimensionSlider_ValueChanged"/>
+                <Label x:Name="heightDimensionLabel" Content="Level height — (xx)"/>
+                <Slider x:Name="heightDimensionSlider" Minimum="2" Maximum="50" ValueChanged="DimensionSlider_ValueChanged"/>
+            </StackPanel>
+            <StackPanel x:Name="monsterWaitPanel" Margin="0,2,0,2" Visibility="Collapsed">
+                <Label x:Name="monsterWaitLabel" Content="Monster spawn time — (xxx)"/>
+                <Slider x:Name="monsterWaitSlider" Minimum="2" Maximum="50" ValueChanged="monsterWaitSlider_ValueChanged"/>
+            </StackPanel>
+            <StackPanel x:Name="texturesPanel" Margin="0,2,0,2" Visibility="Collapsed">
+                <Grid Margin="0,2,0,2" Grid.IsSharedSizeScope="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition SharedSizeGroup="A" Width="1*"/>
+                        <ColumnDefinition SharedSizeGroup="A" Width="1*"/>
+                        <ColumnDefinition SharedSizeGroup="A" Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition SharedSizeGroup="C" Height="1*"/>
+                        <RowDefinition SharedSizeGroup="C" Height="1*"/>
+                        <RowDefinition SharedSizeGroup="C" Height="1*"/>
+                    </Grid.RowDefinitions>
+                    <RadioButton x:Name="textureDimensionNorth" GroupName="TextureDirection" Content="North" Grid.Column="1" Grid.Row="0"/>
+                    <RadioButton x:Name="textureDimensionEast" GroupName="TextureDirection" HorizontalAlignment="Right" Content="East" Grid.Column="2" Grid.Row="1"/>
+                    <RadioButton x:Name="textureDimensionSouth" GroupName="TextureDirection" Content="South" Grid.Column="1" Grid.Row="2"/>
+                    <RadioButton x:Name="textureDimensionWest" GroupName="TextureDirection" Content="West" Grid.Column="0" Grid.Row="1"/>
+                </Grid>
+                <ComboBox x:Name="textureDropdown" Margin="0,2,0,2" SelectionChanged="textureDropdown_SelectionChanged"/>
+                <Image x:Name="texturePreview" Margin="0,2,0,2"/>
+                <Label Content="Default / Edge texture"/>
+                <ComboBox x:Name="edgeTextureDropdown" Margin="0,2,0,2" SelectionChanged="edgeTextureDropdown_SelectionChanged"/>
+                <Image x:Name="edgeTexturePreview" Margin="0,2,0,2"/>
+            </StackPanel>
+            <StackPanel x:Name="decorationTexturesPanel" Margin="0,2,0,2" Visibility="Collapsed">
+                <ComboBox x:Name="decorationTextureDropdown" Margin="0,2,0,2" SelectionChanged="decorationTextureDropdown_SelectionChanged"/>
+                <Image x:Name="decorationTexturePreview" Margin="0,2,0,2"/>
+            </StackPanel>
+        </StackPanel>
+        <Grid Grid.Column="3" Margin="5" Grid.IsSharedSizeScope="True">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition SharedSizeGroup="B" Width="1*"/>
+                <ColumnDefinition SharedSizeGroup="B" Width="1*"/>
+                <ColumnDefinition SharedSizeGroup="B" Width="1*"/>
+                <ColumnDefinition SharedSizeGroup="B" Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="undoButton" Content="Undo" IsEnabled="False" Click="undoButton_Click" Grid.Column="0" VerticalAlignment="Top" Margin="2"/>
+            <Button x:Name="openButton" Content="Open" Click="openButton_Click" Grid.Column="1" VerticalAlignment="Top" Margin="2"/>
+            <Button x:Name="saveButton" Content="Save" Click="saveButton_Click" Grid.Column="2" VerticalAlignment="Top" Margin="2"/>
+            <Button x:Name="saveAsButton" Content="Save As" Click="saveAsButton_Click" Grid.Column="3" VerticalAlignment="Top" Margin="2"/>
+            <Button x:Name="levelAddButton" Content="Create" Click="levelAddButton_Click" Grid.Column="0" VerticalAlignment="Bottom" Margin="2"/>
+            <Button x:Name="levelDeleteButton" Content="Delete" Click="levelDeleteButton_Click" Grid.Column="1" VerticalAlignment="Bottom" Margin="2"/>
+            <Button x:Name="levelMoveUpButton" Content="↑" Click="levelMoveUpButton_Click" Grid.Column="2" VerticalAlignment="Bottom" Margin="2"/>
+            <Button x:Name="levelMoveDownButton" Content="↓" Click="levelMoveDownButton_Click" Grid.Column="3" VerticalAlignment="Bottom" Margin="2"/>
+        </Grid>
     </Grid>
 </Window>
