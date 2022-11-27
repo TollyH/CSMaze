@@ -65,7 +65,7 @@ namespace CSMaze
             Config cfg = new(configIniPath);
             Level[] levels = MazeLevels.LoadLevelJson(levelJsonPath);
 
-            IntPtr window = SDL.SDL_CreateWindow("PyMaze - Loading", SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, cfg.ViewportWidth, cfg.ViewportHeight, 0);
+            IntPtr window = SDL.SDL_CreateWindow("CSMaze - Loading", SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, cfg.ViewportWidth, cfg.ViewportHeight, 0);
 
             bool quit = false;
 
@@ -133,15 +133,15 @@ namespace CSMaze
             IntPtr screen = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RendererFlags.SDL_RENDERER_TARGETTEXTURE | SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC);
             if (!isMulti)
             {
-                SDL.SDL_SetWindowTitle(window, "PyMaze - Level 1");
+                SDL.SDL_SetWindowTitle(window, "CSMaze - Level 1");
             }
             else if (isCoop)
             {
-                SDL.SDL_SetWindowTitle(window, $"PyMaze Co-op - Level {currentLevel + 1}");
+                SDL.SDL_SetWindowTitle(window, $"CSMaze Co-op - Level {currentLevel + 1}");
             }
             else
             {
-                SDL.SDL_SetWindowTitle(window, "PyMaze Deathmatch");
+                SDL.SDL_SetWindowTitle(window, "CSMaze Deathmatch");
             }
             IntPtr windowIcon = SDL_image.IMG_Load("main.png");
             SDL.SDL_SetWindowIcon(window, windowIcon);
@@ -391,7 +391,7 @@ namespace CSMaze
                                     {
                                         continue;
                                     }
-                                    SDL.SDL_SetWindowTitle(window, $"PyMaze - Level {currentLevel + 1}");
+                                    SDL.SDL_SetWindowTitle(window, $"CSMaze - Level {currentLevel + 1}");
                                 }
                             }
                             else if (evn.key.keysym.sym == SDL.SDL_Keycode.SDLK_q)
