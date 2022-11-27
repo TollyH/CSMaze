@@ -52,7 +52,7 @@
             </Button>
         </StackPanel>
         <StackPanel Grid.Column="1" Margin="5" Orientation="Horizontal">
-            <Canvas x:Name="mapCanvas" Width="500" Height="500" MouseDown="mapCanvas_MouseDown" MouseMove="mapCanvas_MouseMove"/>
+            <Canvas x:Name="mapCanvas" Margin="5" Width="500" Height="500" ClipToBounds="True" MouseDown="mapCanvas_MouseDown" MouseMove="mapCanvas_MouseMove"/>
             <Slider x:Name="zoomSlider" Orientation="Vertical" Minimum="0.01" Maximum="1" Value="1" ValueChanged="zoomSlider_ValueChanged"/>
         </StackPanel>
         <StackPanel Grid.Column="2" Margin="5">
@@ -108,6 +108,7 @@
             <Button x:Name="openButton" Content="Open" Click="openButton_Click" Grid.Column="1" VerticalAlignment="Top" Margin="2"/>
             <Button x:Name="saveButton" Content="Save" Click="saveButton_Click" Grid.Column="2" VerticalAlignment="Top" Margin="2"/>
             <Button x:Name="saveAsButton" Content="Save As" Click="saveAsButton_Click" Grid.Column="3" VerticalAlignment="Top" Margin="2"/>
+            <ListBox x:Name="levelSelect" Margin="2,27,2,27" Grid.ColumnSpan="4" SelectionChanged="levelSelect_SelectionChanged"/>
             <Button x:Name="levelAddButton" Content="Create" Click="levelAddButton_Click" Grid.Column="0" VerticalAlignment="Bottom" Margin="2"/>
             <Button x:Name="levelDeleteButton" Content="Delete" Click="levelDeleteButton_Click" Grid.Column="1" VerticalAlignment="Bottom" Margin="2"/>
             <Button x:Name="levelMoveUpButton" Content="↑" Click="levelMoveUpButton_Click" Grid.Column="2" VerticalAlignment="Bottom" Margin="2"/>
