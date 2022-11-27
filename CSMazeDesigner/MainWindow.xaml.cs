@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -64,6 +66,99 @@ namespace CSMaze.Designer
                 toolButtons[currentTool].IsEnabled = true;
                 currentTool = newTool;
                 toolButtons[currentTool].IsEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// Prompt the user to select a JSON file then load it, overwriting the data currently loaded.
+        /// </summary>
+        private void OpenFile()
+        {
+            if (unsavedChanges && MessageBox.Show("You currently have unsaved changes, are you sure you wish to load a file? This will overwrite everything here.",
+                "Unsaved changes", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+            {
+                return;
+            }
+            OpenFileDialog dialog = new()
+            {
+                CheckFileExists = true,
+                DefaultExt = "JSON files|*.json",
+                InitialDirectory = AppDomain.CurrentDomain.BaseDirectory
+            };
+            bool? result = dialog.ShowDialog();
+            if (result is null || !result.Value)
+            {
+                return;
+            }
+            if (!File.Exists(dialog.FileName))
+            {
+                _ = MessageBox.Show("File does not exist", "Not found", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            try
+            {
+                levels = MazeLevels.LoadLevelJson(dialog.FileName);
+                currentPath = dialog.FileName;
+                Title = $"Level Designer - {dialog.FileName}";
+                currentLevel = -1;
+                currentTile = new System.Drawing.Point(-1, -1);
+                bulkWallSelection.Clear();
+                zoomLevel = 1;
+                scrollOffset = new System.Drawing.Point(0, 0);
+                doUpdates = false;
+                zoomSlider.Value = 1;
+                doUpdates = true;
+                undoStack.Clear();
+                undoButton.IsEnabled = false;
+                unsavedChanges = false;
+                // TODO: UpdateLevelList()
+                // TODO: UpdateMapCanvas()
+                // TODO: UpdatePropertiesPanel()
+            }
+            catch (Exception exc)
+            {
+                _ = MessageBox.Show($"An error occurred loading the file.\nIs it definitely a valid levels file?\n\nThe following info was given: {exc}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Prompt the user to provide a location to save a JSON file then do so.
+        /// </summary>
+        /// <param name="filepath">If given, the user file prompt will be skipped.</param>
+        private void SaveFile(string? filepath = null)
+        {
+            if (filepath is null or "")
+            {
+                SaveFileDialog dialog = new()
+                {
+                    AddExtension = true,
+                    DefaultExt = "JSON files|*.json",
+                    InitialDirectory = AppDomain.CurrentDomain.BaseDirectory
+                };
+                bool? result = dialog.ShowDialog();
+                if (result is null || !result.Value)
+                {
+                    return;
+                }
+                filepath = dialog.FileName;
+            }
+            if (filepath == "")
+            {
+                return;
+            }
+            try
+            {
+                MazeLevels.SaveLevelJson(filepath, levels);
+                Title = $"Level Designer - {filepath}";
+                currentPath = filepath;
+                unsavedChanges = false;
+            }
+            catch (Exception exc)
+            {
+                _ = MessageBox.Show($"An error occurred saving the file.\nThe following info was given: {exc}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
         }
 
@@ -135,17 +230,17 @@ namespace CSMaze.Designer
 
         private void openButton_Click(object sender, RoutedEventArgs e)
         {
-
+            OpenFile();
         }
 
         private void saveButton_Click(object sender, RoutedEventArgs e)
         {
-
+            SaveFile(currentPath);
         }
 
         private void saveAsButton_Click(object sender, RoutedEventArgs e)
         {
-
+            SaveFile();
         }
 
         private void levelAddButton_Click(object sender, RoutedEventArgs e)
