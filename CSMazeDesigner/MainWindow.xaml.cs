@@ -33,7 +33,7 @@ namespace CSMaze.Designer
         private System.Drawing.Point lastVisitedTile = new(-1, -1);
         private double zoomLevel = 1;
         private System.Drawing.Point scrollOffset = new(0, 0);
-        private readonly Stack<(int, Level[])> undoStack = new();
+        private readonly Stack<(int, IEnumerable<JsonLevel>)> undoStack = new();
         private bool unsavedChanges = false;
         // Used to prevent methods from being called when programmatically setting widget values.
         private bool doUpdates = true;
@@ -41,8 +41,8 @@ namespace CSMaze.Designer
         private readonly Dictionary<Tool, string> descriptions = new();
         private readonly Dictionary<Tool, Button> toolButtons = new();
 
-        private WallDirection SelectedDirection => textureDimensionWest.IsChecked!.Value ? WallDirection.West : textureDimensionEast!.IsChecked.Value
-            ? WallDirection.East : textureDimensionSouth!.IsChecked.Value ? WallDirection.South : WallDirection.North;
+        private WallDirection SelectedDirection => textureDimensionWest.IsChecked!.Value ? WallDirection.West : textureDimensionEast.IsChecked!.Value
+            ? WallDirection.East : textureDimensionSouth.IsChecked!.Value ? WallDirection.South : WallDirection.North;
 
         public MainWindow() : this(null) { }
 
@@ -548,6 +548,36 @@ namespace CSMaze.Designer
             UpdatePropertiesPanel();
         }
 
+        /// <summary>
+        /// Add the state of all the current levels to the undo stack.
+        /// </summary>
+        /// <remarks>Also marks the file as having unsaved changes.</remarks>
+        private void AddToUndo()
+        {
+            unsavedChanges = true;
+            undoStack.Push((currentLevel, levels.Cast<JsonLevel>()));
+            undoButton.IsEnabled = true;
+        }
+
+        /// <summary>
+        /// Revert the current level to its state before the most recent non-undone action.
+        /// </summary>
+        private void PerformUndo()
+        {
+            if (undoStack.Count > 0)
+            {
+                (currentLevel, IEnumerable<JsonLevel> jsonLevels) = undoStack.Pop();
+                levels = jsonLevels.Cast<Level>().ToArray();
+                UpdateLevelList();
+                UpdateMapCanvas();
+                UpdatePropertiesPanel();
+            }
+            if (undoStack.Count == 0)
+            {
+                undoButton.IsEnabled = false;
+            }
+        }
+
         private void ToolButton_Click(object sender, RoutedEventArgs e)
         {
             SelectTool((Tool)((Button)sender).Tag);
@@ -565,7 +595,25 @@ namespace CSMaze.Designer
             }
             else if (e.Key == Key.A)
             {
-                // TODO: Bulk select walls
+                if (currentLevel < 0 || currentTile.X == -1 || currentTile.Y == -1)
+                {
+                    return;
+                }
+                if (levels[currentLevel][currentTile].Wall is null)
+                {
+                    return;
+                }
+                for (int y = 0; y < levels[currentLevel].Dimensions.Height; y++)
+                {
+                    for (int x = 0; x < levels[currentLevel].Dimensions.Width; x++)
+                    {
+                        if (levels[currentLevel][x, y].Wall is not null)
+                        {
+                            bulkWallSelection.Add(new System.Drawing.Point(x, y));
+                        }
+                    }
+                }
+                UpdateMapCanvas();
             }
         }
 

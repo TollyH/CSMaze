@@ -193,6 +193,11 @@ namespace CSMaze
                 exitKeys.ToArray(), keySensors.ToArray(), guns.ToArray(), decorations, MonsterStart?.ToArray(), MonsterWait, EdgeWallTextureName);
         }
 
+        public static explicit operator JsonLevel(Level lvl)
+        {
+            return lvl.GetJsonLevel();
+        }
+
         /// <summary>
         /// Checks for the precense of a wall, as well as whether the monster and/or player should collide.
         /// </summary>
@@ -589,6 +594,11 @@ namespace CSMaze
             return new Level(new Size(dimensions[0], dimensions[1]), edge_wall_texture_name, wallMap, collisionMap, new Point(start_point[0], start_point[1]),
                 new Point(end_point[0], end_point[1]), exitKeys, keySensors, convertedGuns, convertedDecorations,
                 monster_start is null ? null : new Point(monster_start[0], monster_start[1]), monster_wait);
+        }
+
+        public static explicit operator Level(JsonLevel lvl)
+        {
+            return lvl.GetLevel();
         }
     }
 }
