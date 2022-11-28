@@ -54,9 +54,14 @@ namespace CSMaze.ConfigEditor
             {
                 if (sender == viewportWidthSlider && displayColumnsSlider is not null)
                 {
-                    int newWidth = (int)e.NewValue;
-                    // Display columns must always be less than or equal to view width.
+                    int newWidth = (int)Math.Round(e.NewValue);
                     displayColumnsSlider.Maximum = newWidth;
+                    // Display columns must always be less than or equal to view width.
+                    if ((int)Math.Round(displayColumnsSlider.Value) > newWidth ||
+                        (int)Math.Round(e.OldValue) == (int)Math.Round(displayColumnsSlider.Value))
+                    {
+                        displayColumnsSlider.Value = newWidth;
+                    }
                 }
                 ControlTag tag = (ControlTag)((Slider)sender).Tag;
                 // Truncate the number of decimal places on a float represented as a string.
