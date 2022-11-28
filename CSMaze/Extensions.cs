@@ -17,6 +17,16 @@ namespace CSMaze
         }
 
         /// <summary>
+        /// Convert a Vector2 with floating point values to a Point with integer values.
+        /// </summary>
+        /// <param name="vector">The Vector2 to round.</param>
+        /// <returns>A Point with the rounded integer values.</returns>
+        public static Point Round(this Vector2 vector)
+        {
+            return new Point((int)Math.Round(vector.X), (int)Math.Round(vector.Y));
+        }
+
+        /// <summary>
         /// Convert a Point with integer values to a Vector2 with floating point values.
         /// </summary>
         /// <param name="point">The Point to convert.</param>

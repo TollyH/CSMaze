@@ -398,9 +398,9 @@ namespace CSMaze
                             {
                                 if (playerWalls[currentLevel] is null && wallPlaceCooldown[currentLevel] == 0 && hasStartedLevel[currentLevel] && !isMulti)
                                 {
-                                    Point cardinalFacing = facingDirections[currentLevel].Floor();
-                                    Point target = levels[currentLevel].PlayerCoords.Floor();
-                                    target.Offset(cardinalFacing);
+                                    Point cardinalFacing = facingDirections[currentLevel].Round();
+                                    Point target = new((int)levels[currentLevel].PlayerCoords.X + cardinalFacing.X,
+                                        (int)levels[currentLevel].PlayerCoords.Y + cardinalFacing.Y);
                                     if (levels[currentLevel].IsCoordInBounds(target) && !levels[currentLevel][target].PlayerCollide
                                         && !levels[currentLevel][target].MonsterCollide && levels[currentLevel][target].Wall is null)
                                     {
@@ -705,7 +705,7 @@ namespace CSMaze
                             // Remove player placed wall if enough time has passed
                             levels[currentLevel][currentPlayerWall.Value.Item1] = new Level.GridSquareContents(null, false, false);
                             playerWalls[currentLevel] = null;
-                            wallPlaceCooldown[currentLevel] = 0;
+                            wallPlaceCooldown[currentLevel] = cfg.PlayerWallCooldown;
                         }
                         if (displayCompass && !compassBurnedOut[currentLevel] && levels[currentLevel].MonsterCoords is not null)
                         {
