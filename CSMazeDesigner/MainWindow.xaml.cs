@@ -3,16 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace CSMaze.Designer
@@ -33,7 +28,7 @@ namespace CSMaze.Designer
         private System.Drawing.Point lastVisitedTile = new(-1, -1);
         private double zoomLevel = 1;
         private System.Drawing.Point scrollOffset = new(0, 0);
-        private readonly Stack<(int, IEnumerable<JsonLevel>)> undoStack = new();
+        private readonly Stack<(int, JsonLevel[])> undoStack = new();
         private bool unsavedChanges = false;
         // Used to prevent methods from being called when programmatically setting widget values.
         private bool doUpdates = true;
@@ -94,6 +89,28 @@ namespace CSMaze.Designer
                 currentTool = newTool;
                 toolButtons[currentTool].IsEnabled = false;
             }
+        }
+
+        /// <summary>
+        /// Determine whether a particular tile in a level is free to have a wall placed on it.
+        /// </summary>
+        private bool IsTileFree(System.Drawing.Point tile, Level? lvl = null)
+        {
+            lvl ??= levels[currentLevel];
+            if (!lvl.IsCoordInBounds(tile))
+            {
+                return false;
+            }
+            if (tile == lvl.StartPoint || lvl.EndPoint == lvl.StartPoint || lvl.MonsterStart == lvl.StartPoint)
+            {
+                return false;
+            }
+            if (lvl.OriginalExitKeys.Contains(tile) || lvl.OriginalKeySensors.Contains(tile)
+                || lvl.OriginalGuns.Contains(tile) || lvl.Decorations.ContainsKey(tile))
+            {
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -521,26 +538,166 @@ namespace CSMaze.Designer
                     }
                     break;
                 case Tool.Move:
+                    System.Drawing.Point newOffset = scrollOffset;
+                    if (mousePos.X >= mapCanvas.ActualWidth * 0.75)
+                    {
+                        newOffset = new System.Drawing.Point(newOffset.X + 1, newOffset.Y);
+                    }
+                    else if (mousePos.X <= mapCanvas.ActualWidth * 0.25)
+                    {
+                        newOffset = new System.Drawing.Point(newOffset.X - 1, newOffset.Y);
+                    }
+                    if (mousePos.Y >= mapCanvas.ActualHeight * 0.75)
+                    {
+                        newOffset = new System.Drawing.Point(newOffset.X, newOffset.Y + 1);
+                    }
+                    else if (mousePos.Y <= mapCanvas.ActualHeight * 0.25)
+                    {
+                        newOffset = new System.Drawing.Point(newOffset.X, newOffset.Y - 1);
+                    }
+                    // If we can't move diagonally, try moving in just one dimension instead.
+                    foreach (System.Drawing.Point tryOffset in new System.Drawing.Point[] {
+                        newOffset, new System.Drawing.Point(newOffset.X, scrollOffset.Y), new System.Drawing.Point(scrollOffset.X, newOffset.Y) })
+                    {
+                        if (lvl.IsCoordInBounds(Math.Max(1, (int)(lvl.Dimensions.Width * zoomLevel) + tryOffset.X - 1),
+                            Math.Max(1, (int)(lvl.Dimensions.Height * zoomLevel) + tryOffset.Y - 1)) && lvl.IsCoordInBounds(tryOffset))
+                        {
+                            // New scroll offset remains in level boundaries
+                            scrollOffset = tryOffset;
+                            UpdateMapCanvas();
+                            break;
+                        }
+                    }
                     break;
                 case Tool.Wall:
+                    if (!IsTileFree(clickedTile))
+                    {
+                        return;
+                    }
+                    AddToUndo();
+                    Level.GridSquareContents gridSquare = lvl[clickedTile];
+                    Level.GridSquareContents newGridSquare = new(gridSquare.Wall is not null ? null
+                        : (lvl.EdgeWallTextureName, lvl.EdgeWallTextureName, lvl.EdgeWallTextureName, lvl.EdgeWallTextureName),
+                        gridSquare.Wall is null, gridSquare.Wall is null);
+                    lvl[clickedTile] = newGridSquare;
                     break;
                 case Tool.CollisionPlayer:
+                    if (clickedTile != lvl.MonsterStart && !IsTileFree(clickedTile))
+                    {
+                        return;
+                    }
+                    AddToUndo();
+                    gridSquare = lvl[clickedTile];
+                    newGridSquare = new(gridSquare.Wall, !gridSquare.PlayerCollide, gridSquare.MonsterCollide);
+                    lvl[clickedTile] = newGridSquare;
                     break;
                 case Tool.CollisionMonster:
+                    if (clickedTile == lvl.MonsterStart)
+                    {
+                        return;
+                    }
+                    AddToUndo();
+                    gridSquare = lvl[clickedTile];
+                    newGridSquare = new(gridSquare.Wall, gridSquare.PlayerCollide, !gridSquare.MonsterCollide);
+                    lvl[clickedTile] = newGridSquare;
                     break;
                 case Tool.Start:
+                    if (lvl[clickedTile].Wall is not null || lvl[clickedTile].PlayerCollide || !IsTileFree(clickedTile))
+                    {
+                        return;
+                    }
+                    AddToUndo();
+                    lvl.StartPoint = clickedTile;
                     break;
                 case Tool.End:
+                    if (lvl[clickedTile].Wall is not null || lvl[clickedTile].PlayerCollide || !IsTileFree(clickedTile))
+                    {
+                        return;
+                    }
+                    AddToUndo();
+                    lvl.EndPoint = clickedTile;
                     break;
                 case Tool.Key:
+                    if (lvl.OriginalExitKeys.Contains(clickedTile))
+                    {
+                        AddToUndo();
+                        lvl.OriginalExitKeys = lvl.OriginalExitKeys.Remove(clickedTile);
+                    }
+                    else
+                    {
+                        if (lvl[clickedTile].Wall is not null || lvl[clickedTile].PlayerCollide || !IsTileFree(clickedTile))
+                        {
+                            return;
+                        }
+                        AddToUndo();
+                        lvl.OriginalExitKeys = lvl.OriginalExitKeys.Add(clickedTile);
+                    }
                     break;
                 case Tool.Sensor:
+                    if (lvl.OriginalKeySensors.Contains(clickedTile))
+                    {
+                        AddToUndo();
+                        lvl.OriginalKeySensors = lvl.OriginalKeySensors.Remove(clickedTile);
+                    }
+                    else
+                    {
+                        if (lvl[clickedTile].Wall is not null || lvl[clickedTile].PlayerCollide || !IsTileFree(clickedTile))
+                        {
+                            return;
+                        }
+                        AddToUndo();
+                        lvl.OriginalKeySensors = lvl.OriginalKeySensors.Add(clickedTile);
+                    }
                     break;
                 case Tool.Gun:
+                    if (lvl.OriginalGuns.Contains(clickedTile))
+                    {
+                        AddToUndo();
+                        lvl.OriginalGuns = lvl.OriginalGuns.Remove(clickedTile);
+                    }
+                    else
+                    {
+                        if (lvl[clickedTile].Wall is not null || lvl[clickedTile].PlayerCollide || !IsTileFree(clickedTile))
+                        {
+                            return;
+                        }
+                        AddToUndo();
+                        lvl.OriginalGuns = lvl.OriginalGuns.Add(clickedTile);
+                    }
                     break;
                 case Tool.Monster:
+                    if (clickedTile == lvl.MonsterStart)
+                    {
+                        AddToUndo();
+                        lvl.MonsterStart = null;
+                        lvl.MonsterWait = null;
+                    }
+                    else
+                    {
+                        if (lvl[clickedTile].Wall is not null || lvl[clickedTile].MonsterCollide || !IsTileFree(clickedTile))
+                        {
+                            return;
+                        }
+                        AddToUndo();
+                        lvl.MonsterStart = clickedTile;
+                        lvl.MonsterWait ??= 10;
+                    }
                     break;
                 case Tool.Decoration:
+                    if (lvl.Decorations.ContainsKey(clickedTile))
+                    {
+                        AddToUndo();
+                        _ = lvl.Decorations.Remove(clickedTile);
+                    }
+                    else
+                    {
+                        if (lvl[clickedTile].Wall is not null || !IsTileFree(clickedTile))
+                        {
+                            return;
+                        }
+                        AddToUndo();
+                        lvl.Decorations = lvl.Decorations.Add(clickedTile, (string)((ComboBoxItem)decorationTextureDropdown.Items[0]).Content);
+                    }
                     break;
                 default: break;
             }
@@ -555,7 +712,7 @@ namespace CSMaze.Designer
         private void AddToUndo()
         {
             unsavedChanges = true;
-            undoStack.Push((currentLevel, levels.Cast<JsonLevel>()));
+            undoStack.Push((currentLevel, levels.Select(x => (JsonLevel)x).ToArray()));
             undoButton.IsEnabled = true;
         }
 
@@ -566,9 +723,10 @@ namespace CSMaze.Designer
         {
             if (undoStack.Count > 0)
             {
-                (currentLevel, IEnumerable<JsonLevel> jsonLevels) = undoStack.Pop();
-                levels = jsonLevels.Cast<Level>().ToArray();
+                (int oldLevel, JsonLevel[] jsonLevels) = undoStack.Pop();
+                levels = jsonLevels.Select(x => (Level)x).ToArray();
                 UpdateLevelList();
+                levelSelect.SelectedIndex = oldLevel;
                 UpdateMapCanvas();
                 UpdatePropertiesPanel();
             }
@@ -674,7 +832,7 @@ namespace CSMaze.Designer
 
         private void undoButton_Click(object sender, RoutedEventArgs e)
         {
-
+            PerformUndo();
         }
 
         private void openButton_Click(object sender, RoutedEventArgs e)
