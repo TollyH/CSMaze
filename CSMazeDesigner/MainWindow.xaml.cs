@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -807,7 +808,72 @@ namespace CSMaze.Designer
 
         private void DimensionSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-
+            if (currentLevel < 0 || !doUpdates)
+            {
+                return;
+            }
+            System.Drawing.Size newDimensions = new((int)Math.Round(widthDimensionSlider.Value), (int)Math.Round(heightDimensionSlider.Value));
+            Level lvl = levels[currentLevel];
+            if (newDimensions == lvl.Dimensions)
+            {
+                return;
+            }
+            AddToUndo();
+            bulkWallSelection.Clear();
+            System.Drawing.Size oldDimensions = lvl.Dimensions;
+            lvl.Dimensions = newDimensions;
+            if (!lvl.IsCoordInBounds(lvl.StartPoint) || !lvl.IsCoordInBounds(lvl.EndPoint))
+            {
+                // Don't allow the user to shrink start/end points out of bounds.
+                lvl.Dimensions = new System.Drawing.Size(Math.Max(lvl.StartPoint.X + 1, Math.Max(lvl.EndPoint.X + 1, lvl.Dimensions.Width)),
+                    Math.Max(lvl.StartPoint.Y + 1, Math.Max(lvl.EndPoint.Y + 1, lvl.Dimensions.Height)));
+            }
+            System.Drawing.Point? monsterStart = lvl.MonsterStart;
+            if (monsterStart is not null && !lvl.IsCoordInBounds(monsterStart.Value))
+            {
+                lvl.Dimensions = new System.Drawing.Size(Math.Max(monsterStart.Value.X + 1, lvl.Dimensions.Width),
+                    Math.Max(monsterStart.Value.Y + 1, lvl.Dimensions.Height));
+            }
+            if (oldDimensions == lvl.Dimensions)
+            {
+                PerformUndo();
+                return;
+            }
+            // Remove out of bounds keys, sensors, and guns.
+            lvl.OriginalExitKeys = lvl.OriginalExitKeys.Where(x => lvl.IsCoordInBounds(x)).ToImmutableHashSet();
+            lvl.OriginalKeySensors = lvl.OriginalKeySensors.Where(x => lvl.IsCoordInBounds(x)).ToImmutableHashSet();
+            lvl.OriginalGuns = lvl.OriginalGuns.Where(x => lvl.IsCoordInBounds(x)).ToImmutableHashSet();
+            // Remove excess rows and columns
+            (string, string, string, string)?[,] newWallMap = new (string, string, string, string)?[lvl.Dimensions.Width, lvl.Dimensions.Height];
+            for (int y = 0; y < Math.Min(lvl.Dimensions.Height, lvl.WallMap.GetLength(1)); y++)
+            {
+                for (int x = 0; x < Math.Min(lvl.Dimensions.Width, lvl.WallMap.GetLength(0)); x++)
+                {
+                    newWallMap[x, y] = lvl.WallMap[x, y];
+                }
+            }
+            lvl.WallMap = newWallMap;
+            (bool, bool)[,] newCollisionMap = new (bool, bool)[lvl.Dimensions.Width, lvl.Dimensions.Height];
+            for (int y = 0; y < Math.Min(lvl.Dimensions.Height, lvl.CollisionMap.GetLength(1)); y++)
+            {
+                for (int x = 0; x < Math.Min(lvl.Dimensions.Width, lvl.CollisionMap.GetLength(0)); x++)
+                {
+                    newCollisionMap[x, y] = lvl.CollisionMap[x, y];
+                }
+            }
+            lvl.CollisionMap = newCollisionMap;
+            if (!lvl.IsCoordInBounds(currentTile))
+            {
+                currentTile = new System.Drawing.Point(-1, -1);
+            }
+            zoomLevel = 1;
+            scrollOffset = new System.Drawing.Point(0, 0);
+            doUpdates = false;
+            zoomSlider.Value = 1;
+            doUpdates = true;
+            UpdatePropertiesPanel();
+            UpdateLevelList();
+            UpdateMapCanvas();
         }
 
         private void monsterWaitSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -872,6 +938,10 @@ namespace CSMaze.Designer
 
         private void levelSelect_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (!doUpdates)
+            {
+                return;
+            }
             int selection = levelSelect.SelectedIndex >= 0 ? levelSelect.SelectedIndex : -1;
             if (selection != currentLevel)
             {

@@ -34,10 +34,10 @@ namespace CSMaze
             }
         }
 
-        public Size Dimensions { get; private set; }
+        public Size Dimensions { get; set; }
         public string EdgeWallTextureName { get; private set; }
-        public (string, string, string, string)?[,] WallMap { get; private set; }
-        public (bool, bool)[,] CollisionMap { get; private set; }
+        public (string, string, string, string)?[,] WallMap { get; set; }
+        public (bool, bool)[,] CollisionMap { get; set; }
         public Point StartPoint { get; set; }
         public Point EndPoint { get; set; }
         public Vector2 PlayerCoords { get; private set; }
