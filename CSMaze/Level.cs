@@ -340,7 +340,7 @@ namespace CSMaze
             {
                 if (collisionCheck)
                 {
-                    if (!this[gridPos.X, oldGridPos.Y].PlayerCollide || !this[oldGridPos.X, gridPos.Y].PlayerCollide)
+                    if (this[gridPos.X, oldGridPos.Y].PlayerCollide || this[oldGridPos.X, gridPos.Y].PlayerCollide)
                     {
                         return events;
                     }
