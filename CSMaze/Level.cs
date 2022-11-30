@@ -35,7 +35,7 @@ namespace CSMaze
         }
 
         public Size Dimensions { get; set; }
-        public string EdgeWallTextureName { get; private set; }
+        public string EdgeWallTextureName { get; set; }
         public (string, string, string, string)?[,] WallMap { get; set; }
         public (bool, bool)[,] CollisionMap { get; set; }
         public Point StartPoint { get; set; }

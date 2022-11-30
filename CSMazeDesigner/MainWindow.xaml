@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CSMaze.Designer"
         mc:Ignorable="d"
-        Title="Level Designer - No File" Icon="editor.ico" SizeToContent="WidthAndHeight" KeyDown="Window_KeyDown">
+        Title="Level Designer - No File" Icon="editor.ico" SizeToContent="WidthAndHeight" KeyDown="Window_KeyDown" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>

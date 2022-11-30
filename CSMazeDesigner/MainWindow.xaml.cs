@@ -878,22 +878,65 @@ namespace CSMaze.Designer
 
         private void monsterWaitSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-
+            if (currentLevel < 0 || !doUpdates)
+            {
+                return;
+            }
+            int roundedTime = (int)Math.Round(monsterWaitSlider.Value) * 5;
+            Level lvl = levels[currentLevel];
+            if (roundedTime == lvl.MonsterWait)
+            {
+                return;
+            }
+            AddToUndo();
+            lvl.MonsterWait = roundedTime;
+            UpdatePropertiesPanel();
         }
 
         private void textureDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            if (currentLevel < 0 || !doUpdates || !levels[currentLevel].IsCoordInBounds(currentTile))
+            {
+                return;
+            }
+            AddToUndo();
+            Level lvl = levels[currentLevel];
+            foreach (System.Drawing.Point tile in bulkWallSelection)
+            {
+                Level.GridSquareContents gridSquare = lvl[tile];
+                if (gridSquare.Wall is not null)
+                {
+                    string[] textures = new string[4] { gridSquare.Wall.Value.Item1, gridSquare.Wall.Value.Item2,
+                        gridSquare.Wall.Value.Item3, gridSquare.Wall.Value.Item4 };
+                    textures[(int)SelectedDirection] = (string)((ComboBoxItem)e.AddedItems[0]!).Content;
+                    lvl[tile] = new Level.GridSquareContents((textures[0], textures[1], textures[2], textures[3]),
+                        gridSquare.PlayerCollide, gridSquare.MonsterCollide);
+                }
+            }
+            UpdatePropertiesPanel();
         }
 
         private void edgeTextureDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            if (currentLevel < 0 || !doUpdates)
+            {
+                return;
+            }
+            AddToUndo();
+            levels[currentLevel].EdgeWallTextureName = (string)((ComboBoxItem)e.AddedItems[0]!).Content;
+            UpdatePropertiesPanel();
         }
 
         private void decorationTextureDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            if (currentLevel < 0 || !doUpdates || !levels[currentLevel].IsCoordInBounds(currentTile))
+            {
+                return;
+            }
+            AddToUndo();
+            levels[currentLevel].Decorations = levels[currentLevel].Decorations.SetItem(currentTile,
+                (string)((ComboBoxItem)e.AddedItems[0]!).Content);
+            UpdatePropertiesPanel();
         }
 
         private void undoButton_Click(object sender, RoutedEventArgs e)
@@ -918,22 +961,61 @@ namespace CSMaze.Designer
 
         private void levelAddButton_Click(object sender, RoutedEventArgs e)
         {
-
+            AddToUndo();
+            List<Level> levelList = levels.ToList();
+            levelList.Insert(currentLevel + 1, new Level(new System.Drawing.Size(10, 10), (string)((ComboBoxItem)edgeTextureDropdown.Items[0]).Content,
+                new (string, string, string, string)?[10, 10], new (bool, bool)[10, 10], new System.Drawing.Point(0, 0),
+                new System.Drawing.Point(1, 0), new HashSet<System.Drawing.Point>(), new HashSet<System.Drawing.Point>(),
+                new HashSet<System.Drawing.Point>(), new Dictionary<System.Drawing.Point, string>(), null, null));
+            levels = levelList.ToArray();
+            UpdateLevelList();
+            UpdateMapCanvas();
+            UpdatePropertiesPanel();
         }
 
         private void levelDeleteButton_Click(object sender, RoutedEventArgs e)
         {
-
+            if (currentLevel < 0)
+            {
+                return;
+            }
+            if (MessageBox.Show("Are you sure you want to delete this level? While it may be temporarily possible to undo, " +
+                "it should not be depended upon!", "Delete level", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+            {
+                return;
+            }
+            AddToUndo();
+            List<Level> levelList = levels.ToList();
+            levelList.RemoveAt(currentLevel);
+            levels = levelList.ToArray();
+            currentLevel = -1;
+            UpdateLevelList();
+            UpdateMapCanvas();
+            UpdatePropertiesPanel();
         }
 
         private void levelMoveUpButton_Click(object sender, RoutedEventArgs e)
         {
-
+            if (currentLevel <= 0)
+            {
+                return;
+            }
+            AddToUndo();
+            (levels[currentLevel], levels[currentLevel - 1]) = (levels[currentLevel - 1], levels[currentLevel]);
+            currentLevel--;
+            UpdateLevelList();
         }
 
         private void levelMoveDownButton_Click(object sender, RoutedEventArgs e)
         {
-
+            if (currentLevel < 0 || currentLevel >= levels.Length - 1)
+            {
+                return;
+            }
+            AddToUndo();
+            (levels[currentLevel], levels[currentLevel + 1]) = (levels[currentLevel + 1], levels[currentLevel]);
+            currentLevel++;
+            UpdateLevelList();
         }
 
         private void levelSelect_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -956,6 +1038,12 @@ namespace CSMaze.Designer
                 UpdateMapCanvas();
                 UpdatePropertiesPanel();
             }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            e.Cancel = unsavedChanges && MessageBox.Show("You currently have unsaved changes, are you sure you wish to exit?",
+                "Unsaved changes", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No;
         }
     }
 
