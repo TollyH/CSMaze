@@ -30,7 +30,7 @@ namespace CSMaze
             {
                 // Positions are sent as integers with 2 d.p of accuracy from the original float.
                 byte[] bytes = new byte[ByteSize];
-                BinaryPrimitives.WriteInt32BigEndian(bytes.AsSpan()[..^4], (int)(XPos * 100));
+                BinaryPrimitives.WriteInt32BigEndian(bytes.AsSpan()[..4], (int)(XPos * 100));
                 BinaryPrimitives.WriteInt32BigEndian(bytes.AsSpan()[4..8], (int)(YPos * 100));
                 return bytes;
             }

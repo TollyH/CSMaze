@@ -99,10 +99,10 @@ namespace CSMaze.Server
                                 _ = currentLevel.Guns.Remove(gridPos);
                                 Point monsterCoords = currentLevel.MonsterCoords is null ? new Point(-1, -1) : currentLevel.MonsterCoords.Value;
                                 playerBytes = new byte[2 + (NetData.Coords.ByteSize * (remainingItems.Count + 1)) + (NetData.Player.ByteSize * (players.Count - 1))];
-                                offset = NetData.Coords.ByteSize + 1;
+                                offset = NetData.Coords.ByteSize + 2;
                                 playerBytes[0] = players[playerKey].HitsRemaining == 0 ? (byte)1 : (byte)0;
                                 Array.Copy(new NetData.Coords(monsterCoords.X, monsterCoords.Y).ToByteArray(), 0, playerBytes, 1, NetData.Coords.ByteSize);
-                                playerBytes[NetData.Coords.ByteSize] = (byte)(players.Count - 1);
+                                playerBytes[NetData.Coords.ByteSize + 1] = (byte)(players.Count - 1);
                             }
                             int i = 0;
                             foreach (byte[] key in players.Keys)
@@ -114,11 +114,13 @@ namespace CSMaze.Server
                                 }
                             }
                             offset += i * NetData.Player.ByteSize;
+                            i = 0;
                             if (coop.Value)
                             {
                                 foreach (Point item in remainingItems)
                                 {
                                     Array.Copy(new NetData.Coords(item.X, item.Y).ToByteArray(), 0, playerBytes, offset + (i * NetData.Coords.ByteSize), NetData.Coords.ByteSize);
+                                    i++;
                                 }
                             }
                             _ = sock.Send(playerBytes, playerBytes.Length, endPoint);
