@@ -1,6 +1,8 @@
-﻿using SDL2;
+﻿using Microsoft.VisualBasic;
+using SDL2;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
 
 namespace CSMaze
 {
@@ -164,6 +166,68 @@ namespace CSMaze
                                         SDL.SDL_RenderPresent(screen);
                                     }
                                 }
+                            }
+                        }
+                        else if (evn.button.button == SDL.SDL_BUTTON_RIGHT)
+                        {
+                            if (y is >= 108 and <= 158)
+                            {
+                                string host = Interaction.InputBox("Enter the server address to connect to.\nThis should be in IP address form.", "Enter Server", "127.0.0.1");
+                                string port = Interaction.InputBox("Enter the port number to use.\nAsk the server host if you are unsure what this is.", "Enter Port", "13375");
+                                string name = Interaction.InputBox("Enter the server address to connect to.\nThis should be in IP address form.", "Enter Your Name", "Player");
+
+                                SDL.SDL_DestroyRenderer(screen);
+                                SDL.SDL_DestroyWindow(window);
+
+                                MazeGame.Maze(multiplayerServer: $"{host}:{port}", multiplayerName: name);
+
+                                // Clean-up
+                                SDL.SDL_FreeSurface(titleTextSfc);
+                                SDL.SDL_DestroyTexture(titleText);
+                                SDL.SDL_FreeSurface(copyrightTextSfc);
+                                SDL.SDL_DestroyTexture(copyrightText);
+                                SDL.SDL_FreeSurface(playTextSfc);
+                                SDL.SDL_DestroyTexture(playText);
+                                SDL.SDL_FreeSurface(configTextSfc);
+                                SDL.SDL_DestroyTexture(configText);
+                                SDL.SDL_FreeSurface(designerTextSfc);
+                                SDL.SDL_DestroyTexture(designerText);
+                                SDL.SDL_FreeSurface(windowIcon);
+
+                                return true;
+                            }
+                        }
+                        else if (evn.button.button == SDL.SDL_BUTTON_MIDDLE)
+                        {
+                            if (y is >= 108 and <= 158 && File.Exists(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "CSMazeServer.exe")))
+                            {
+                                string portStr = "";
+                                string levelStr = "";
+                                bool coop = MessageBox.Show("Do you want this game to be a co-operative match?\nIf not, it will instead be a death-match.",
+                                    "Game mode", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+                                while (!int.TryParse(portStr, out _))
+                                {
+                                    portStr = Interaction.InputBox("Enter the port number to host on. It is recommended to use ports over 1024.\n" +
+                                        "Port numbers must be below 65535.\nIf a port number doesn't work, try a different one, it may already be in use.", "Enter Port", "13375");
+                                }
+                                while (!int.TryParse(levelStr, out _))
+                                {
+                                    levelStr = Interaction.InputBox("Enter the level number to use for this match.", "Enter Level", "1");
+                                }
+                                string args = $"-t={portStr} -l={int.Parse(levelStr) - 1}";
+                                if (coop)
+                                {
+                                    args += " -o";
+                                }
+                                _ = Process.Start(new ProcessStartInfo(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "CSMazeServer.exe"), args));
+                                while (Process.GetProcessesByName("CSMazeServer").Length != 0)
+                                {
+                                    while (SDL.SDL_PollEvent(out _) != 0) { }
+                                    _ = SDL.SDL_SetRenderDrawColor(screen, ScreenDrawing.Blue.R, ScreenDrawing.Blue.G, ScreenDrawing.Blue.B, 255);
+                                    _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
+                                    SDL.SDL_RenderPresent(screen);
+                                }
+                                return false;
                             }
                         }
                     }
