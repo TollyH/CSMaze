@@ -688,7 +688,7 @@ namespace CSMaze.Designer
                     if (lvl.Decorations.ContainsKey(clickedTile))
                     {
                         AddToUndo();
-                        _ = lvl.Decorations.Remove(clickedTile);
+                        lvl.Decorations = lvl.Decorations.Remove(clickedTile);
                     }
                     else
                     {

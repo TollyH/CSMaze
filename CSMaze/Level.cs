@@ -166,19 +166,19 @@ namespace CSMaze
             }
 
             List<int[]> exitKeys = new();
-            foreach (Point key in ExitKeys)
+            foreach (Point key in OriginalExitKeys)
             {
                 exitKeys.Add(key.ToArray());
             }
 
             List<int[]> keySensors = new();
-            foreach (Point sensor in KeySensors)
+            foreach (Point sensor in OriginalKeySensors)
             {
                 keySensors.Add(sensor.ToArray());
             }
 
             List<int[]> guns = new();
-            foreach (Point gun in Guns)
+            foreach (Point gun in OriginalGuns)
             {
                 guns.Add(gun.ToArray());
             }
