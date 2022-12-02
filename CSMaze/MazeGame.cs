@@ -659,7 +659,7 @@ namespace CSMaze
                 Point? monsterCoords;
                 if (levels[currentLevel].Killed)
                 {
-                    if (SDL_mixer.Mix_PlayingMusic() != 0)
+                    if (SDL_mixer.Mix_PlayingMusic() != 0 && SDL_mixer.Mix_PausedMusic() == 0)
                     {
                         SDL_mixer.Mix_PauseMusic();
                     }
@@ -673,7 +673,7 @@ namespace CSMaze
                 // Currently playing
                 else
                 {
-                    if (SDL_mixer.Mix_PlayingMusic() == 0 && !levels[currentLevel].Won && !isResetPromptShown)
+                    if (SDL_mixer.Mix_PausedMusic() != 0 && !levels[currentLevel].Won && !isResetPromptShown)
                     {
                         SDL_mixer.Mix_ResumeMusic();
                     }
@@ -1010,7 +1010,7 @@ namespace CSMaze
 
                 if (levels[currentLevel].Won)
                 {
-                    if (SDL_mixer.Mix_PlayingMusic() != 0)
+                    if (SDL_mixer.Mix_PlayingMusic() != 0 && SDL_mixer.Mix_PausedMusic() == 0)
                     {
                         SDL_mixer.Mix_PauseMusic();
                     }
@@ -1043,7 +1043,7 @@ namespace CSMaze
 
                 if (isResetPromptShown)
                 {
-                    if (SDL_mixer.Mix_PlayingMusic() != 0)
+                    if (SDL_mixer.Mix_PlayingMusic() != 0 && SDL_mixer.Mix_PausedMusic() == 0)
                     {
                         SDL_mixer.Mix_PauseMusic();
                     }
