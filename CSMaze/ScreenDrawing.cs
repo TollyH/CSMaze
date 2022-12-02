@@ -154,11 +154,12 @@ namespace CSMaze
         /// <summary>
         /// Draw the red kill screen with the monster fullscreen. Also used in multiplayer to display the player's killer.
         /// </summary>
-        public static void DrawKillScreen(IntPtr screen, IntPtr jumpscareMonsterTexture)
+        public static void DrawKillScreen(IntPtr screen, Config cfg, IntPtr jumpscareMonsterTexture)
         {
             _ = SDL.SDL_SetRenderDrawColor(screen, Red.R, Red.G, Red.B, 255);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
-            _ = SDL.SDL_RenderCopy(screen, jumpscareMonsterTexture, IntPtr.Zero, IntPtr.Zero);
+            SDL.SDL_Rect dstRect = new() { x = 0, y = 0, w = cfg.ViewportWidth, h = cfg.ViewportHeight };
+            _ = SDL.SDL_RenderCopy(screen, jumpscareMonsterTexture, IntPtr.Zero, ref dstRect);
         }
 
         /// <summary>
@@ -605,7 +606,8 @@ namespace CSMaze
         /// </summary>
         public static void DrawGun(IntPtr screen, Config cfg, IntPtr gunTexture)
         {
-            _ = SDL.SDL_RenderCopy(screen, gunTexture, IntPtr.Zero, IntPtr.Zero);
+            SDL.SDL_Rect dstRect = new() { x = 0, y = 0, w = cfg.ViewportWidth, h = cfg.ViewportHeight };
+            _ = SDL.SDL_RenderCopy(screen, gunTexture, IntPtr.Zero, ref dstRect);
             _ = SDL_gfx.filledCircleRGBA(screen, (short)(cfg.ViewportWidth / 2), (short)(cfg.ViewportHeight / 2), 5, Black.R, Black.G, Black.B, 255);
             _ = SDL_gfx.filledCircleRGBA(screen, (short)(cfg.ViewportWidth / 2), (short)(cfg.ViewportHeight / 2), 3, White.R, White.G, White.B, 255);
         }
