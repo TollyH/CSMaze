@@ -65,6 +65,8 @@ namespace CSMaze
             Config cfg = new(configIniPath);
             Level[] levels = MazeLevels.LoadLevelJson(levelJsonPath);
 
+            _ = SDL.SDL_SetHintWithPriority(SDL.SDL_HINT_RENDER_DRIVER, "direct3d11", SDL.SDL_HintPriority.SDL_HINT_OVERRIDE);
+
             IntPtr window = SDL.SDL_CreateWindow("CSMaze - Loading", SDL.SDL_WINDOWPOS_UNDEFINED, SDL.SDL_WINDOWPOS_UNDEFINED, cfg.ViewportWidth, cfg.ViewportHeight, 0);
 
             bool quit = false;
