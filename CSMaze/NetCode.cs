@@ -46,6 +46,10 @@ namespace CSMaze
             {
                 _ = sock.Send(toSend, 33 + NetData.Coords.ByteSize, addr);
                 byte[] playerListBytes = sock.Receive(ref addr);
+                if (playerListBytes.Length < 6)
+                {
+                    throw new Exception("Invalid packet for ping. Ignoring.");
+                }
                 byte hitsRemaining = playerListBytes[0];
                 byte lastKillerSkin = playerListBytes[1];
                 ushort kills = BinaryPrimitives.ReadUInt16BigEndian(playerListBytes.AsSpan()[2..4]);
@@ -58,8 +62,9 @@ namespace CSMaze
                 }
                 return (hitsRemaining, lastKillerSkin, kills, deaths, players);
             }
-            catch (SocketException)
+            catch (Exception e)
             {
+                Console.WriteLine(e);
                 return null;
             }
         }
@@ -78,10 +83,14 @@ namespace CSMaze
             Array.Copy(coordBytes, 0, toSend, 33, NetData.Coords.ByteSize);
             try
             {
+                int coordsSize = NetData.Coords.ByteSize;
                 _ = sock.Send(toSend, 33 + NetData.Coords.ByteSize, addr);
                 byte[] playerListBytes = sock.Receive(ref addr);
+                if (playerListBytes.Length < coordsSize + 2)
+                {
+                    throw new Exception("Invalid packet for ping. Ignoring.");
+                }
                 bool killed = playerListBytes[0] != 0;
-                int coordsSize = NetData.Coords.ByteSize;
                 Point? monsterCoords = new NetData.Coords(playerListBytes[1..(coordsSize + 1)]).ToPoint();
                 if (monsterCoords == new Point(-1, -1))
                 {
@@ -104,8 +113,9 @@ namespace CSMaze
                 }
                 return (killed, monsterCoords, players, pickedUpItems);
             }
-            catch (SocketException)
+            catch (Exception e)
             {
+                Console.WriteLine(e);
                 return null;
             }
         }
@@ -130,8 +140,9 @@ namespace CSMaze
                 byte[] receivedBytes = sock.Receive(ref addr);
                 return (receivedBytes[..32], receivedBytes[32], receivedBytes[33] != 0);
             }
-            catch (SocketException)
+            catch (Exception e)
             {
+                Console.WriteLine(e);
                 return null;
             }
         }
@@ -153,10 +164,11 @@ namespace CSMaze
             {
                 _ = sock.Send(toSend, 33 + (NetData.Coords.ByteSize * 2), addr);
                 byte[] receivedBytes = sock.Receive(ref addr);
-                return (ShotResponse)receivedBytes[0];
+                return receivedBytes.Length != 1 ? throw new Exception("Invalid packet for gunfire. Ignoring.") : (ShotResponse?)(ShotResponse)receivedBytes[0];
             }
-            catch (SocketException)
+            catch (Exception e)
             {
+                Console.WriteLine(e);
                 return null;
             }
         }
@@ -173,7 +185,10 @@ namespace CSMaze
                 Array.Copy(playerKey, 0, toSend, 1, 32);
                 _ = sock.Send(toSend, 33, addr);
             }
-            catch (SocketException) { }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         /// <summary>
@@ -188,7 +203,10 @@ namespace CSMaze
                 Array.Copy(playerKey, 0, toSend, 1, 32);
                 _ = sock.Send(toSend, 33, addr);
             }
-            catch (SocketException) { }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
     }
 }
