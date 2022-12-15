@@ -336,11 +336,11 @@ namespace CSMaze
             Point oldGridPos = PlayerCoords.Floor();
             Point relativeGridPos = new(gridPos.X - oldGridPos.X, gridPos.Y - oldGridPos.Y);
             // Moved diagonally therefore skipping a square, make sure that's valid.
-            if (relativeGridPos.X > 0 && relativeGridPos.Y > 0)
+            if (relativeGridPos.X != 0 && relativeGridPos.Y != 0)
             {
                 if (collisionCheck)
                 {
-                    if (this[gridPos.X, oldGridPos.Y].PlayerCollide || this[oldGridPos.X, gridPos.Y].PlayerCollide)
+                    if (this[gridPos.X, oldGridPos.Y].PlayerCollide && this[oldGridPos.X, gridPos.Y].PlayerCollide)
                     {
                         return events;
                     }
