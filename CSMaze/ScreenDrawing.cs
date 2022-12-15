@@ -629,7 +629,7 @@ namespace CSMaze
         /// </summary>
         public static void DrawKillCount(IntPtr screen, Config cfg, int kills)
         {
-            IntPtr killsTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, kills.ToString(), Red.ToSDL(false));
+            IntPtr killsTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, kills.ToString(), Green.ToSDL(false));
             IntPtr killsText = SDL.SDL_CreateTextureFromSurface(screen, killsTextSfc);
             _ = SDL.SDL_QueryTexture(killsText, out _, out _, out int w, out int h);
             SDL.SDL_Rect textureRect = new() { x = cfg.ViewportWidth - w - 15, y = cfg.ViewportHeight - 40, w = w, h = h };
