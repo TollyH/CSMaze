@@ -668,7 +668,7 @@ namespace CSMaze
                         _ = SDL_mixer.Mix_PlayChannel(-1, resources.MonsterJumpscareSound, 0);
                         hasStartedLevel[currentLevel] = false;
                     }
-                    ScreenDrawing.DrawKillScreen(screen, cfg, !isMulti || isCoop ? resources.JumpscareMonsterTexture : resources.PlayerTextures[lastKillerSkin]);
+                    ScreenDrawing.DrawKillScreen(screen, cfg, !isMulti || isCoop ? resources.JumpscareMonsterTexture : resources.PlayerTextures[lastKillerSkin], isMulti, isCoop);
                 }
                 // Currently playing
                 else

@@ -154,12 +154,22 @@ namespace CSMaze
         /// <summary>
         /// Draw the red kill screen with the monster fullscreen. Also used in multiplayer to display the player's killer.
         /// </summary>
-        public static void DrawKillScreen(IntPtr screen, Config cfg, IntPtr jumpscareMonsterTexture)
+        public static void DrawKillScreen(IntPtr screen, Config cfg, IntPtr jumpscareMonsterTexture, bool multi, bool coop)
         {
             _ = SDL.SDL_SetRenderDrawColor(screen, Red.R, Red.G, Red.B, 255);
             _ = SDL.SDL_RenderFillRect(screen, IntPtr.Zero);
             SDL.SDL_Rect dstRect = new() { x = 0, y = 0, w = cfg.ViewportWidth, h = cfg.ViewportHeight };
             _ = SDL.SDL_RenderCopy(screen, jumpscareMonsterTexture, IntPtr.Zero, ref dstRect);
+            if (!coop)
+            {
+                IntPtr resetHintSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, multi ? "Press any key to respawn" : "Press R to reset the level", White.ToSDL(false));
+                IntPtr resetHint = SDL.SDL_CreateTextureFromSurface(screen, resetHintSfc);
+                _ = SDL.SDL_QueryTexture(resetHint, out _, out _, out int w, out int h);
+                SDL.SDL_Rect textureRect = new() { x = (cfg.ViewportWidth / 2) - (w / 2), y = cfg.ViewportHeight - 45, w = w, h = h };
+                _ = SDL.SDL_RenderCopy(screen, resetHint, IntPtr.Zero, ref textureRect);
+                SDL.SDL_FreeSurface(resetHintSfc);
+                SDL.SDL_DestroyTexture(resetHint);
+            }
         }
 
         /// <summary>
