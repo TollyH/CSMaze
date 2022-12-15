@@ -235,7 +235,7 @@ namespace CSMaze
                         {
                             pickupFlashTimeRemaining = 0.4f;
                         }
-                        if (response is not null or ShotResponse.Denied)
+                        if (response is not null and not ShotResponse.Denied)
                         {
                             _ = SDL_mixer.Mix_PlayChannel(-1, resources.GunshotSound, 0);
                         }
