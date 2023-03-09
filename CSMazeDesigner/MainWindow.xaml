@@ -81,10 +81,10 @@
                         <RowDefinition SharedSizeGroup="C" Height="1*"/>
                         <RowDefinition SharedSizeGroup="C" Height="1*"/>
                     </Grid.RowDefinitions>
-                    <RadioButton x:Name="textureDimensionNorth" GroupName="TextureDirection" Content="North" Grid.Column="1" Grid.Row="0"/>
-                    <RadioButton x:Name="textureDimensionEast" GroupName="TextureDirection" HorizontalAlignment="Right" Content="East" Grid.Column="2" Grid.Row="1"/>
-                    <RadioButton x:Name="textureDimensionSouth" GroupName="TextureDirection" Content="South" Grid.Column="1" Grid.Row="2"/>
-                    <RadioButton x:Name="textureDimensionWest" GroupName="TextureDirection" Content="West" Grid.Column="0" Grid.Row="1"/>
+                    <RadioButton x:Name="textureDimensionNorth" GroupName="TextureDirection" Content="North" Grid.Column="1" Grid.Row="0" IsChecked="True" Checked="TextureDimension_Checked"/>
+                    <RadioButton x:Name="textureDimensionEast" GroupName="TextureDirection" HorizontalAlignment="Right" Content="East" Grid.Column="2" Grid.Row="1" Checked="TextureDimension_Checked"/>
+                    <RadioButton x:Name="textureDimensionSouth" GroupName="TextureDirection" Content="South" Grid.Column="1" Grid.Row="2" Checked="TextureDimension_Checked"/>
+                    <RadioButton x:Name="textureDimensionWest" GroupName="TextureDirection" Content="West" Grid.Column="0" Grid.Row="1" Checked="TextureDimension_Checked"/>
                 </Grid>
                 <ComboBox x:Name="textureDropdown" Margin="0,2,0,2" SelectionChanged="textureDropdown_SelectionChanged"/>
                 <Image x:Name="texturePreview" Margin="0,2,0,2"/>

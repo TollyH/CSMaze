@@ -32,7 +32,7 @@ namespace CSMaze.Designer
         private readonly Stack<(int, JsonLevel[])> undoStack = new();
         private bool unsavedChanges = false;
         // Used to prevent methods from being called when programmatically setting widget values.
-        private bool doUpdates = true;
+        private bool doUpdates;
 
         private readonly Dictionary<Tool, string> descriptions = new();
         private readonly Dictionary<Tool, Button> toolButtons = new();
@@ -48,7 +48,9 @@ namespace CSMaze.Designer
             // This prevents issues with required files not being found.
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             cfg = new Config(configIniPath ?? "config.ini");
+            doUpdates = false;
             InitializeComponent();
+            doUpdates = true;
             foreach (Button btn in toolButtonPanel.Children.OfType<Button>())
             {
                 toolButtons[(Tool)btn.Tag] = btn;
@@ -484,7 +486,6 @@ namespace CSMaze.Designer
                     selectedSquareDescription.Foreground = Brushes.White;
                     selectedSquareDescription.Text = descriptions[Tool.Wall];
                     texturesPanel.Visibility = Visibility.Visible;
-                    textureDimensionNorth.IsChecked = true;
                     (string, string, string, string)? tileTextures = lvl[currentTile].Wall;
                     if (tileTextures is not null)
                     {
@@ -1044,6 +1045,11 @@ namespace CSMaze.Designer
         {
             e.Cancel = unsavedChanges && MessageBox.Show("You currently have unsaved changes, are you sure you wish to exit?",
                 "Unsaved changes", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No;
+        }
+
+        private void TextureDimension_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdatePropertiesPanel();
         }
     }
 
