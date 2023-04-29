@@ -284,6 +284,15 @@
     <None Update="textures\sky.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="textures\sprite\decoration\credits-fin.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="textures\sprite\decoration\credits-tolly.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="textures\sprite\decoration\credits-tom.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="textures\sprite\decoration\shrub.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
