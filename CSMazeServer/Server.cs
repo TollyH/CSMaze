@@ -29,7 +29,7 @@ namespace CSMaze.Server
             Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
             Level[] levels = MazeLevels.LoadLevelJson(levelJsonPath);
-            byte skinCount = (byte)Directory.GetFiles(Path.Join("textures", "player"), "*.png").Length;
+            byte skinCount = (byte)Directory.GetFiles(Path.Join("textures", "sprite", "player"), "*.png").Length;
             Level currentLevel = levels[level.Value];
             if (coop.Value)
             {

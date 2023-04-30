@@ -88,7 +88,7 @@ namespace CSMaze
             }
             DecorationTextures = decorationTextures.ToImmutableDictionary();
 
-            PlayerTextures = Directory.EnumerateFiles(Path.Join("textures", "player"), "*.png").Select(x => SDL_image.IMG_LoadTexture(renderer, x)).ToArray();
+            PlayerTextures = Directory.EnumerateFiles(Path.Join("textures", "sprite", "player"), "*.png").Select(x => SDL_image.IMG_LoadTexture(renderer, x)).ToArray();
 
             Dictionary<int, (IntPtr, IntPtr)> playerWallTextures = new();
             foreach (string imageName in Directory.EnumerateFiles(Path.Join("textures", "player_wall"), "*.png"))
