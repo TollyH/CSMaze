@@ -174,7 +174,7 @@ namespace CSMaze
                             {
                                 string host = Interaction.InputBox("Enter the server address to connect to.\nThis should be in IP address form.", "Enter Server", "127.0.0.1");
                                 string port = Interaction.InputBox("Enter the port number to use.\nAsk the server host if you are unsure what this is.", "Enter Port", "13375");
-                                string name = Interaction.InputBox("Enter the server address to connect to.\nThis should be in IP address form.", "Enter Your Name", "Player");
+                                string name = Interaction.InputBox("Enter the name to use.\nThere is a limit of 24 characters.", "Enter Your Name", "Player");
 
                                 SDL.SDL_DestroyRenderer(screen);
                                 SDL.SDL_DestroyWindow(window);
