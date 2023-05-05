@@ -2,7 +2,7 @@
 {
     public class ByteArrayComparer : EqualityComparer<byte[]>
     {
-        public override bool Equals(byte[] first, byte[] second)
+        public override bool Equals(byte[]? first, byte[]? second)
         {
             if (first == null || second == null)
             {
