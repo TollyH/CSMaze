@@ -275,7 +275,12 @@ namespace CSMaze
                 // Sprite is fully off screen - don't render it
                 return;
             }
-            Size spriteSize = new((int)Math.Abs(filledScreenWidth / transformation.Y), (int)Math.Abs(cfg.ViewportHeight / transformation.Y));
+            Size spriteSize = new((int)(filledScreenWidth / transformation.Y), (int)(cfg.ViewportHeight / transformation.Y));
+            if (spriteSize.Width <= 0 || spriteSize.Height <= 0)
+            {
+                // Sprite is behind player - don't render it
+                return;
+            }
             if (cfg.FogStrength > 0)
             {
                 byte mask = (byte)(255 - Math.Min(byte.MaxValue, 255f / ((float)spriteSize.Height / cfg.ViewportHeight * cfg.FogStrength)));
