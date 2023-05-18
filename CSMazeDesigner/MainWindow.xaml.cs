@@ -227,7 +227,7 @@ namespace CSMaze.Designer
             Level lvl = levels[currentLevel];
             int tileWidth = (int)mapCanvas.ActualWidth / (int)Math.Max(lvl.Dimensions.Width * zoomLevel, 1);
             int tileHeight = (int)mapCanvas.ActualHeight / (int)Math.Max(lvl.Dimensions.Height * zoomLevel, 1);
-            List<(int, int, SolidColorBrush, SolidColorBrush)> tilesToRedraw = new();
+            List<(int X, int Y, SolidColorBrush Fill, SolidColorBrush Stroke)> tilesToRedraw = new();
             for (int y = 0; y < lvl.Dimensions.Height - scrollOffset.Y; y++)
             {
                 for (int x = 0; x < lvl.Dimensions.Width - scrollOffset.X ; x++)
@@ -292,18 +292,18 @@ namespace CSMaze.Designer
                 }
             }
             // Redraw the selected tile(s) to keep the entire outline on top.
-            foreach ((int, int, SolidColorBrush, SolidColorBrush) tile in tilesToRedraw)
+            foreach ((int X, int Y, SolidColorBrush Fill, SolidColorBrush Stroke) tile in tilesToRedraw)
             {
                 Rectangle newRect = new()
                 {
                     Width = tileWidth,
                     Height = tileHeight,
-                    Fill = tile.Item3,
-                    Stroke = tile.Item4,
+                    Fill = tile.Fill,
+                    Stroke = tile.Stroke,
                     StrokeThickness = 1
                 };
-                Canvas.SetLeft(newRect, (tileWidth - 1) * tile.Item1);
-                Canvas.SetTop(newRect, (tileHeight - 1) * tile.Item2);
+                Canvas.SetLeft(newRect, (tileWidth - 1) * tile.X);
+                Canvas.SetTop(newRect, (tileHeight - 1) * tile.Y);
                 _ = mapCanvas.Children.Add(newRect);
             }
             for (int y = 0; y < lvl.Dimensions.Height - scrollOffset.Y; y++)
@@ -486,11 +486,11 @@ namespace CSMaze.Designer
                     selectedSquareDescription.Foreground = Brushes.White;
                     selectedSquareDescription.Text = descriptions[Tool.Wall];
                     texturesPanel.Visibility = Visibility.Visible;
-                    (string, string, string, string)? tileTextures = lvl[currentTile].Wall;
+                    (string NorthTex, string EastTex, string SouthTex, string WestTex)? tileTextures = lvl[currentTile].Wall;
                     if (tileTextures is not null)
                     {
-                        string texture = SelectedDirection == WallDirection.North ? tileTextures.Value.Item1 : SelectedDirection == WallDirection.East
-                            ? tileTextures.Value.Item2 : SelectedDirection == WallDirection.South ? tileTextures.Value.Item3 : tileTextures.Value.Item4;
+                        string texture = SelectedDirection == WallDirection.North ? tileTextures.Value.NorthTex : SelectedDirection == WallDirection.East
+                            ? tileTextures.Value.EastTex : SelectedDirection == WallDirection.South ? tileTextures.Value.SouthTex : tileTextures.Value.WestTex;
                         doUpdates = false;
                         textureDropdown.Text = texture;
                         doUpdates = true;
@@ -845,7 +845,7 @@ namespace CSMaze.Designer
             lvl.OriginalKeySensors = lvl.OriginalKeySensors.Where(x => lvl.IsCoordInBounds(x)).ToImmutableHashSet();
             lvl.OriginalGuns = lvl.OriginalGuns.Where(x => lvl.IsCoordInBounds(x)).ToImmutableHashSet();
             // Remove excess rows and columns
-            (string, string, string, string)?[,] newWallMap = new (string, string, string, string)?[lvl.Dimensions.Width, lvl.Dimensions.Height];
+            (string NorthTex, string EastTex, string SouthTex, string WestTex)?[,] newWallMap = new (string NorthTex, string EastTex, string SouthTex, string WestTex)?[lvl.Dimensions.Width, lvl.Dimensions.Height];
             for (int y = 0; y < Math.Min(lvl.Dimensions.Height, lvl.WallMap.GetLength(1)); y++)
             {
                 for (int x = 0; x < Math.Min(lvl.Dimensions.Width, lvl.WallMap.GetLength(0)); x++)
@@ -907,8 +907,8 @@ namespace CSMaze.Designer
                 Level.GridSquareContents gridSquare = lvl[tile];
                 if (gridSquare.Wall is not null)
                 {
-                    string[] textures = new string[4] { gridSquare.Wall.Value.Item1, gridSquare.Wall.Value.Item2,
-                        gridSquare.Wall.Value.Item3, gridSquare.Wall.Value.Item4 };
+                    string[] textures = new string[4] { gridSquare.Wall.Value.NorthTex, gridSquare.Wall.Value.EastTex,
+                        gridSquare.Wall.Value.SouthTex, gridSquare.Wall.Value.WestTex };
                     textures[(int)SelectedDirection] = (string)((ComboBoxItem)e.AddedItems[0]!).Content;
                     lvl[tile] = new Level.GridSquareContents((textures[0], textures[1], textures[2], textures[3]),
                         gridSquare.PlayerCollide, gridSquare.MonsterCollide);
@@ -965,7 +965,7 @@ namespace CSMaze.Designer
             AddToUndo();
             List<Level> levelList = levels.ToList();
             levelList.Insert(currentLevel + 1, new Level(new System.Drawing.Size(10, 10), (string)((ComboBoxItem)edgeTextureDropdown.Items[0]).Content,
-                new (string, string, string, string)?[10, 10], new (bool, bool)[10, 10], new System.Drawing.Point(0, 0),
+                new (string NorthTex, string EastTex, string SouthTex, string WestTex)?[10, 10], new (bool, bool)[10, 10], new System.Drawing.Point(0, 0),
                 new System.Drawing.Point(1, 0), new HashSet<System.Drawing.Point>(), new HashSet<System.Drawing.Point>(),
                 new HashSet<System.Drawing.Point>(), new Dictionary<System.Drawing.Point, string>(), null, null));
             levels = levelList.ToArray();

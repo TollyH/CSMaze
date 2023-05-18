@@ -12,10 +12,10 @@ namespace CSMaze
     {
         // TEXTURES
         public IntPtr PlaceholderTexture { get; private set; }
-        public ImmutableDictionary<string, (IntPtr, IntPtr)> WallTextures { get; private set; }
+        public ImmutableDictionary<string, (IntPtr LightTex, IntPtr DarkTex)> WallTextures { get; private set; }
         public ImmutableDictionary<string, IntPtr> DecorationTextures { get; private set; }
         public IntPtr[] PlayerTextures { get; private set; }
-        public ImmutableDictionary<int, (IntPtr, IntPtr)> PlayerWallTextures { get; private set; }
+        public ImmutableDictionary<int, (IntPtr LightTex, IntPtr DarkTex)> PlayerWallTextures { get; private set; }
         public IntPtr SkyTexture { get; private set; }
         public ImmutableDictionary<SpriteType, IntPtr> SpriteTextures { get; private set; }
         public ImmutableDictionary<HUDIcon, IntPtr> HUDIcons { get; private set; }
@@ -58,7 +58,7 @@ namespace CSMaze
 
             PlaceholderTexture = SDL_image.IMG_LoadTexture(renderer, Path.Join("textures", "placeholder.png"));
 
-            Dictionary<string, (IntPtr, IntPtr)> wallTextures = new();
+            Dictionary<string, (IntPtr LightTex, IntPtr DarkTex)> wallTextures = new();
             foreach (string imageName in Directory.EnumerateFiles(Path.Join("textures", "wall"), "*.png"))
             {
                 IntPtr imageSurface = SDL_image.IMG_Load(imageName);
@@ -72,8 +72,8 @@ namespace CSMaze
                     _ = SDL.SDL_BlitSurface(darkener, IntPtr.Zero, darkenedImage, IntPtr.Zero);
                     string key = string.Join(".", imageName.Split(Path.DirectorySeparatorChar)[^1].Split(".")[..^1]);
                     wallTextures[key] = (SDL.SDL_CreateTextureFromSurface(renderer, loadedImage), SDL.SDL_CreateTextureFromSurface(renderer, darkenedImage));
-                    _ = SDL.SDL_SetTextureBlendMode(wallTextures[key].Item1, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
-                    _ = SDL.SDL_SetTextureBlendMode(wallTextures[key].Item2, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                    _ = SDL.SDL_SetTextureBlendMode(wallTextures[key].LightTex, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                    _ = SDL.SDL_SetTextureBlendMode(wallTextures[key].DarkTex, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
                     SDL.SDL_FreeSurface(loadedImage);
                     SDL.SDL_FreeSurface(darkenedImage);
                 }
@@ -90,7 +90,7 @@ namespace CSMaze
 
             PlayerTextures = Directory.EnumerateFiles(Path.Join("textures", "sprite", "player"), "*.png").Select(x => SDL_image.IMG_LoadTexture(renderer, x)).ToArray();
 
-            Dictionary<int, (IntPtr, IntPtr)> playerWallTextures = new();
+            Dictionary<int, (IntPtr LightTex, IntPtr DarkTex)> playerWallTextures = new();
             foreach (string imageName in Directory.EnumerateFiles(Path.Join("textures", "player_wall"), "*.png"))
             {
                 IntPtr imageSurface = SDL_image.IMG_Load(imageName);
@@ -104,8 +104,8 @@ namespace CSMaze
                     _ = SDL.SDL_BlitSurface(darkener, IntPtr.Zero, darkenedImage, IntPtr.Zero);
                     int key = int.Parse(imageName.Split(Path.DirectorySeparatorChar)[^1].Split(".")[0]);
                     playerWallTextures[key] = (SDL.SDL_CreateTextureFromSurface(renderer, loadedImage), SDL.SDL_CreateTextureFromSurface(renderer, darkenedImage));
-                    _ = SDL.SDL_SetTextureBlendMode(playerWallTextures[key].Item1, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
-                    _ = SDL.SDL_SetTextureBlendMode(playerWallTextures[key].Item2, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                    _ = SDL.SDL_SetTextureBlendMode(playerWallTextures[key].LightTex, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                    _ = SDL.SDL_SetTextureBlendMode(playerWallTextures[key].DarkTex, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
                     SDL.SDL_FreeSurface(loadedImage);
                     SDL.SDL_FreeSurface(darkenedImage);
                 }

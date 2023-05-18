@@ -22,11 +22,11 @@ namespace CSMaze
     {
         public readonly struct GridSquareContents
         {
-            public (string, string, string, string)? Wall { get; }
+            public (string NorthTex, string EastTex, string SouthTex, string WestTex)? Wall { get; }
             public bool PlayerCollide { get; }
             public bool MonsterCollide { get; }
 
-            public GridSquareContents((string, string, string, string)? wall, bool playerCollide, bool monsterCollide)
+            public GridSquareContents((string NorthTex, string EastTex, string SouthTex, string WestTex)? wall, bool playerCollide, bool monsterCollide)
             {
                 Wall = wall;
                 PlayerCollide = playerCollide;
@@ -36,8 +36,8 @@ namespace CSMaze
 
         public Size Dimensions { get; set; }
         public string EdgeWallTextureName { get; set; }
-        public (string, string, string, string)?[,] WallMap { get; set; }
-        public (bool, bool)[,] CollisionMap { get; set; }
+        public (string NorthTex, string EastTex, string SouthTex, string WestTex)?[,] WallMap { get; set; }
+        public (bool PlayerCollide, bool MonsterCollide)[,] CollisionMap { get; set; }
         public Point StartPoint { get; set; }
         public Point EndPoint { get; set; }
         public Vector2 PlayerCoords { get; private set; }
@@ -58,8 +58,9 @@ namespace CSMaze
         // Used to prevent the monster from backtracking
         private Point? lastMonsterPosition = null;
 
-        public Level(Size dimensions, string edgeWallTextureName, (string, string, string, string)?[,] wallMap, (bool, bool)[,] collisionMap,
-            Point startPoint, Point endPoint, HashSet<Point> exitKeys, HashSet<Point> keySensors, HashSet<Point> guns, Dictionary<Point, string> decorations,
+        public Level(Size dimensions, string edgeWallTextureName, (string NorthTex, string EastTex, string SouthTex, string WestTex)?[,] wallMap,
+            (bool PlayerCollide, bool MonsterCollide)[,] collisionMap, Point startPoint, Point endPoint, HashSet<Point> exitKeys,
+            HashSet<Point> keySensors, HashSet<Point> guns, Dictionary<Point, string> decorations,
             Point? monsterStart, float? monsterWait)
         {
             Dimensions = dimensions;
@@ -148,8 +149,8 @@ namespace CSMaze
                 string[]?[] last = wallMap[^1];
                 for (int x = 0; x < Dimensions.Width; x++)
                 {
-                    (string, string, string, string)? value = WallMap[x, y];
-                    last[x] = value is null ? null : new string[4] { value.Value.Item1, value.Value.Item2, value.Value.Item3, value.Value.Item4 };
+                    (string NorthTex, string EastTex, string SouthTex, string WestTex)? value = WallMap[x, y];
+                    last[x] = value is null ? null : new string[4] { value.Value.NorthTex, value.Value.EastTex, value.Value.SouthTex, value.Value.WestTex };
                 }
             }
 
@@ -160,8 +161,8 @@ namespace CSMaze
                 bool[][] last = collisionMap[^1];
                 for (int x = 0; x < Dimensions.Width; x++)
                 {
-                    (bool, bool) value = CollisionMap[x, y];
-                    last[x] = new bool[2] { value.Item1, value.Item2 };
+                    (bool playerCollide, bool monsterCollide) = CollisionMap[x, y];
+                    last[x] = new bool[2] { playerCollide, monsterCollide };
                 }
             }
 
@@ -213,8 +214,8 @@ namespace CSMaze
             get
             {
                 Point pnt = coord.Floor();
-                (bool, bool) collision = CollisionMap[pnt.X, pnt.Y];
-                return new GridSquareContents(WallMap[pnt.X, pnt.Y], collision.Item1, collision.Item2);
+                (bool playerCollide, bool monsterCollide) = CollisionMap[pnt.X, pnt.Y];
+                return new GridSquareContents(WallMap[pnt.X, pnt.Y], playerCollide, monsterCollide);
             }
             set
             {
@@ -238,8 +239,8 @@ namespace CSMaze
         {
             get
             {
-                (bool, bool) collision = CollisionMap[x, y];
-                return new GridSquareContents(WallMap[x, y], collision.Item1, collision.Item2);
+                (bool playerCollide, bool monsterCollide) = CollisionMap[x, y];
+                return new GridSquareContents(WallMap[x, y], playerCollide, monsterCollide);
             }
             set
             {
@@ -261,8 +262,8 @@ namespace CSMaze
         {
             get
             {
-                (bool, bool) collision = CollisionMap[coord.X, coord.Y];
-                return new GridSquareContents(WallMap[coord.X, coord.Y], collision.Item1, collision.Item2);
+                (bool playerCollide, bool monsterCollide) = CollisionMap[coord.X, coord.Y];
+                return new GridSquareContents(WallMap[coord.X, coord.Y], playerCollide, monsterCollide);
             }
             set
             {
@@ -461,10 +462,10 @@ namespace CSMaze
                 else
                 {
                     // Randomise order of each cardinal direction, then move to the first one available.
-                    List<(int, int)> suffledVectors = new List<(int, int)>() { (0, 1), (0, -1), (1, 0), (-1, 0) }.OrderBy(_ => MazeGame.RNG.Next()).ToList();
-                    foreach ((int, int) vector in suffledVectors)
+                    List<(int X, int Y)> shuffledVectors = new List<(int X, int Y)>() { (0, 1), (0, -1), (1, 0), (-1, 0) }.OrderBy(_ => MazeGame.RNG.Next()).ToList();
+                    foreach ((int x, int y) in shuffledVectors)
                     {
-                        Point target = new(MonsterCoords.Value.X + vector.Item1, MonsterCoords.Value.Y + vector.Item2);
+                        Point target = new(MonsterCoords.Value.X + x, MonsterCoords.Value.Y + y);
                         if (IsCoordInBounds(target) && !this[target].MonsterCollide && lastMonsterPosition != target)
                         {
                             MonsterCoords = target;
@@ -546,7 +547,8 @@ namespace CSMaze
 
         public Level GetLevel()
         {
-            (string, string, string, string)?[,] wallMap = new (string, string, string, string)?[dimensions[0], dimensions[1]];
+            (string NorthTex, string EastTex, string SouthTex, string WestTex)?[,] wallMap =
+                new(string NorthTex, string EastTex, string SouthTex, string WestTex)?[dimensions[0], dimensions[1]];
             for (int x = 0; x < dimensions[0]; x++)
             {
                 for (int y = 0; y < dimensions[1]; y++)

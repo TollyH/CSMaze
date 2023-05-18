@@ -77,7 +77,7 @@ namespace CSMaze
             IPEndPoint? addr = null;
             if (isMulti)
             {
-                (byte[], int, bool)? joinResponse = null;
+                NetCode.JoinResponse? joinResponse = null;
                 try
                 {
                     sock = NetCode.CreateClientSocket();
@@ -157,15 +157,15 @@ namespace CSMaze
             float[] timeScores = new float[levels.Length];
             float[] moveScores = new float[levels.Length];
             bool[] hasStartedLevel = new bool[levels.Length];
-            (float, float)[] highscores;
+            (float TimeScore, float MoveScore)[] highscores;
             if (File.Exists("highscores.json"))
             {
-                (float, float)[]? deserialized = JsonConvert.DeserializeObject<(float, float)[]>(File.ReadAllText("highscores.json"));
-                highscores = deserialized is not null ? deserialized : (new (float, float)[levels.Length]);
+                (float TimeScore, float MoveScore)[]? deserialized = JsonConvert.DeserializeObject<(float TimeScore, float MoveScore)[]>(File.ReadAllText("highscores.json"));
+                highscores = deserialized is not null ? deserialized : (new (float TimeScore, float MoveScore)[levels.Length]);
             }
             else
             {
-                highscores = new (float, float)[levels.Length];
+                highscores = new (float TimeScore, float MoveScore)[levels.Length];
             }
             float[] monsterTimeouts = new float[levels.Length];
             // How long since the monster was last spotted. Used to prevent the "spotted" jumpscare sound playing repeatedly.
@@ -184,7 +184,7 @@ namespace CSMaze
             float hurtFlashTimeRemaining = 0;
             float timeToBreathingFinish = 0;
             float timeToNextRoamSound = 0;
-            (Point, float)?[] playerWalls = new (Point, float)?[levels.Length];
+            (Point Position, float PlaceTime)?[] playerWalls = new (Point Position, float PlaceTime)?[levels.Length];
             for (int i = 0; i < levels.Length; i++)
             {
                 facingDirections[i] = new Vector2(0, 1);
@@ -272,7 +272,7 @@ namespace CSMaze
                         timeSinceServerPing = 0;
                         if (!isCoop)
                         {
-                            (byte, byte, ushort, ushort, NetData.Player[])? pingResponse = NetCode.PingServer(sock!, addr!, playerKey!, levels[currentLevel].PlayerCoords);
+                            NetCode.PingResponse? pingResponse = NetCode.PingServer(sock!, addr!, playerKey!, levels[currentLevel].PlayerCoords);
                             if (pingResponse is not null)
                             {
                                 int previousHits = hitsRemaining;
@@ -295,7 +295,7 @@ namespace CSMaze
                         }
                         else
                         {
-                            (bool, Point ?, NetData.Player[], HashSet<Point>)? pingResponse = NetCode.PingServerCoop(sock!, addr!, playerKey!, levels[currentLevel].PlayerCoords);
+                            NetCode.CoopPingResponse? pingResponse = NetCode.PingServerCoop(sock!, addr!, playerKey!, levels[currentLevel].PlayerCoords);
                             if (pingResponse is not null)
                             {
                                 Level lvl = levels[currentLevel];
@@ -476,10 +476,10 @@ namespace CSMaze
                                 {
                                     displayMap = false;
                                 }
-                                (Point, float)? currentPlayerWall = playerWalls[currentLevel];
+                                (Point Position, float PlaceTime)? currentPlayerWall = playerWalls[currentLevel];
                                 if (currentPlayerWall is not null)
                                 {
-                                    levels[currentLevel][currentPlayerWall.Value.Item1] = new Level.GridSquareContents(null, false, false);
+                                    levels[currentLevel][currentPlayerWall.Value.Position] = new Level.GridSquareContents(null, false, false);
                                     playerWalls[currentLevel] = null;
                                 }
                                 wallPlaceCooldown[currentLevel] = 0;
@@ -701,11 +701,11 @@ namespace CSMaze
                             wallPlaceCooldown[currentLevel] -= frameTime;
                             wallPlaceCooldown[currentLevel] = Math.Max(0, wallPlaceCooldown[currentLevel]);
                         }
-                        (Point, float)? currentPlayerWall = playerWalls[currentLevel];
-                        if (currentPlayerWall is not null && timeScores[currentLevel] > currentPlayerWall.Value.Item2 + cfg.PlayerWallTime)
+                        (Point Position, float PlaceTime)? currentPlayerWall = playerWalls[currentLevel];
+                        if (currentPlayerWall is not null && timeScores[currentLevel] > currentPlayerWall.Value.PlaceTime + cfg.PlayerWallTime)
                         {
                             // Remove player placed wall if enough time has passed
-                            levels[currentLevel][currentPlayerWall.Value.Item1] = new Level.GridSquareContents(null, false, false);
+                            levels[currentLevel][currentPlayerWall.Value.Position] = new Level.GridSquareContents(null, false, false);
                             playerWalls[currentLevel] = null;
                             wallPlaceCooldown[currentLevel] = cfg.PlayerWallCooldown;
                         }
@@ -900,18 +900,18 @@ namespace CSMaze
                             // If a texture for the current level has been found or not.
                             if (cfg.TexturesEnabled)
                             {
-                                (IntPtr, IntPtr) bothTextures;
-                                (Point, float)? currentPlayerWall = playerWalls[currentLevel];
-                                if (currentPlayerWall is not null && collisionWall.Tile == currentPlayerWall.Value.Item1)
+                                (IntPtr LightTex, IntPtr DarkTex) bothTextures;
+                                (Point Position, float PlaceTime)? currentPlayerWall = playerWalls[currentLevel];
+                                if (currentPlayerWall is not null && collisionWall.Tile == currentPlayerWall.Value.Position)
                                 {
                                     // Select appropriate player wall texture depending on how long the wall has left until breaking.
-                                    bothTextures = resources.PlayerWallTextures[(int)((timeScores[currentLevel] - currentPlayerWall.Value.Item2)
+                                    bothTextures = resources.PlayerWallTextures[(int)((timeScores[currentLevel] - currentPlayerWall.Value.PlaceTime)
                                         / cfg.PlayerWallTime * resources.PlayerWallTextures.Count)];
                                 }
                                 else if (levels[currentLevel].IsCoordInBounds(collisionWall.Tile))
                                 {
-                                    (string, string, string, string) tuple = levels[currentLevel][collisionWall.Tile].Wall!.Value;
-                                    string[] point = new string[4] { tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4 };
+                                    (string northTex, string eastTex, string southTex, string westTex) = levels[currentLevel][collisionWall.Tile].Wall!.Value;
+                                    string[] point = new string[4] { northTex, eastTex, southTex, westTex };
                                     bothTextures = resources.WallTextures[point[(int)collisionWall.Side]];
                                 }
                                 else
@@ -920,7 +920,7 @@ namespace CSMaze
                                     bothTextures = resources.WallTextures[levels[currentLevel].EdgeWallTextureName];
                                 }
                                 // Select either light or dark texture depending on side
-                                IntPtr texture = sideWasNs ? bothTextures.Item2 : bothTextures.Item1;
+                                IntPtr texture = sideWasNs ? bothTextures.DarkTex : bothTextures.LightTex;
                                 ScreenDrawing.DrawTexturedColumn(screen, cfg, collisionWall.Coordinate, sideWasNs, columnHeight, collisionWall.Index,
                                     facingDirections[currentLevel], texture, cameraPlanes[currentLevel]);
                             }
@@ -933,9 +933,9 @@ namespace CSMaze
 
                     if (displayMap && !levels[currentLevel].Won && !isResetPromptShown)
                     {
-                        (Point, float)? currentPlayerWall = playerWalls[currentLevel];
+                        (Point Position, float PlaceTime)? currentPlayerWall = playerWalls[currentLevel];
                         ScreenDrawing.DrawMap(screen, cfg, levels[currentLevel], displayRays, rayEndCoords, facingDirections[currentLevel],
-                            keySensorTimes[currentLevel] > 0, currentPlayerWall?.Item1);
+                            keySensorTimes[currentLevel] > 0, currentPlayerWall?.Position);
                     }
 
                     if (pickupFlashTimeRemaining > 0)
@@ -979,12 +979,12 @@ namespace CSMaze
                     {
                         if (!isMulti || isCoop)
                         {
-                            float timeScore = hasStartedLevel[currentLevel] ? timeScores[currentLevel] : highscores[currentLevel].Item1;
-                            float moveScore = hasStartedLevel[currentLevel] ? moveScores[currentLevel] : highscores[currentLevel].Item2;
-                            (Point, float)? currentPlayerWall = playerWalls[currentLevel];
+                            float timeScore = hasStartedLevel[currentLevel] ? timeScores[currentLevel] : highscores[currentLevel].TimeScore;
+                            float moveScore = hasStartedLevel[currentLevel] ? moveScores[currentLevel] : highscores[currentLevel].MoveScore;
+                            (Point Position, float PlaceTime)? currentPlayerWall = playerWalls[currentLevel];
                             ScreenDrawing.DrawStats(screen, cfg, levels[currentLevel].MonsterCoords is not null, timeScore, moveScore,
                                 levels[currentLevel].OriginalExitKeys.Count - levels[currentLevel].ExitKeys.Count, levels[currentLevel].OriginalExitKeys.Count,
-                                resources.HUDIcons, keySensorTimes[currentLevel], compassTimes[currentLevel], compassBurnedOut[currentLevel], currentPlayerWall?.Item2,
+                                resources.HUDIcons, keySensorTimes[currentLevel], compassTimes[currentLevel], compassBurnedOut[currentLevel], currentPlayerWall?.PlaceTime,
                                 wallPlaceCooldown[currentLevel], timeScores[currentLevel], hasGun[currentLevel], isCoop);
                         }
                         else
@@ -1016,14 +1016,14 @@ namespace CSMaze
                     }
                     // Overwrite existing highscores if required
                     bool highscoresUpdated = false;
-                    if (timeScores[currentLevel] < highscores[currentLevel].Item1 || highscores[currentLevel].Item1 == 0)
+                    if (timeScores[currentLevel] < highscores[currentLevel].TimeScore || highscores[currentLevel].TimeScore == 0)
                     {
-                        highscores[currentLevel].Item1 = timeScores[currentLevel];
+                        highscores[currentLevel].TimeScore = timeScores[currentLevel];
                         highscoresUpdated = true;
                     }
-                    if (moveScores[currentLevel] < highscores[currentLevel].Item2 || highscores[currentLevel].Item2 == 0)
+                    if (moveScores[currentLevel] < highscores[currentLevel].MoveScore || highscores[currentLevel].MoveScore == 0)
                     {
-                        highscores[currentLevel].Item2 = moveScores[currentLevel];
+                        highscores[currentLevel].MoveScore = moveScores[currentLevel];
                         highscoresUpdated = true;
                     }
                     if (highscoresUpdated && !Directory.Exists("highscores.json"))

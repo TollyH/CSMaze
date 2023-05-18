@@ -9,6 +9,10 @@ namespace CSMaze
 {
     public static class NetCode
     {
+        public readonly record struct PingResponse(byte HitsRemaining, byte LastKillerSkin, ushort Kills, ushort Deaths, NetData.Player[] Players);
+        public readonly record struct CoopPingResponse(bool Killed, Point? MonsterCoords, NetData.Player[] Players, HashSet<Point> PickedUpItems);
+        public readonly record struct JoinResponse(byte[] PlayerKey, int Level, bool Coop);
+
         /// <summary>
         /// Separates a string in the format 'host:port' to an IPEndPoint.
         /// </summary>
@@ -35,7 +39,7 @@ namespace CSMaze
         /// remaining until death and the skin of our last known killer.
         /// </summary>
         /// <returns>Null if a response doesn't arrive in a timely manner, otherwise: (hitsRemaining, lastKillerSkin, kills, deaths, players)</returns>
-        public static (byte, byte, ushort, ushort, NetData.Player[])? PingServer(UdpClient sock, IPEndPoint addr, byte[] playerKey, Vector2 coords)
+        public static PingResponse? PingServer(UdpClient sock, IPEndPoint addr, byte[] playerKey, Vector2 coords)
         {
             byte[] coordBytes = new NetData.Coords(coords.X, coords.Y).ToByteArray();
             byte[] toSend = new byte[33 + NetData.Coords.ByteSize];
@@ -60,7 +64,7 @@ namespace CSMaze
                 {
                     players[i] = new NetData.Player(playerListBytes[((i * playerByteSize) + 6)..(((i + 1) * playerByteSize) + 6)]);
                 }
-                return (hitsRemaining, lastKillerSkin, kills, deaths, players);
+                return new PingResponse(hitsRemaining, lastKillerSkin, kills, deaths, players);
             }
             catch (Exception e)
             {
@@ -74,7 +78,7 @@ namespace CSMaze
         /// and a list of where all other players are and what items they've picked up.
         /// </summary>
         /// <returns>Null if a response doesn't arrive in a timely manner, otherwise: (killed, monsterCoords, players, pickedUpItems)</returns>
-        public static (bool, Point?, NetData.Player[], HashSet<Point>)? PingServerCoop(UdpClient sock, IPEndPoint addr, byte[] playerKey, Vector2 coords)
+        public static CoopPingResponse? PingServerCoop(UdpClient sock, IPEndPoint addr, byte[] playerKey, Vector2 coords)
         {
             byte[] coordBytes = new NetData.Coords(coords.X, coords.Y).ToByteArray();
             byte[] toSend = new byte[33 + NetData.Coords.ByteSize];
@@ -111,7 +115,7 @@ namespace CSMaze
                 {
                     _ = pickedUpItems.Add(new NetData.Coords(playerListBytes[((i * coordsSize) + offset2)..(((i + 1) * coordsSize) + offset2)]).ToPoint());
                 }
-                return (killed, monsterCoords, players, pickedUpItems);
+                return new CoopPingResponse(killed, monsterCoords, players, pickedUpItems);
             }
             catch (Exception e)
             {
@@ -125,7 +129,7 @@ namespace CSMaze
         /// the level the server is using, and whether the match is co-op or not.
         /// </summary>
         /// <returns>Null if a response doesn't arrive in a timely manner, otherwise: (playerKey, level, coop)</returns>
-        public static (byte[], int, bool)? JoinServer(UdpClient sock, IPEndPoint addr, string name)
+        public static JoinResponse? JoinServer(UdpClient sock, IPEndPoint addr, string name)
         {
             // Player key is all 0 here as we don't have one yet, but all requests still need to have one.
             byte[] toSend = new byte[57];
@@ -138,7 +142,7 @@ namespace CSMaze
             {
                 _ = sock.Send(toSend, 57, addr);
                 byte[] receivedBytes = sock.Receive(ref addr);
-                return (receivedBytes[..32], receivedBytes[32], receivedBytes[33] != 0);
+                return new JoinResponse(receivedBytes[..32], receivedBytes[32], receivedBytes[33] != 0);
             }
             catch (Exception e)
             {

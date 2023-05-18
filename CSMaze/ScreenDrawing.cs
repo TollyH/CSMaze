@@ -48,7 +48,7 @@ namespace CSMaze
         /// <summary>
         /// Draw the victory screen seen after beating a level. Displays numerous scores to the player in a gradual animation.
         /// </summary>
-        public static void DrawVictoryScreen(IntPtr screen, IReadOnlyList<(float, float)> highscores, int currentLevel,
+        public static void DrawVictoryScreen(IntPtr screen, IReadOnlyList<(float TimeScore, float MoveScore)> highscores, int currentLevel,
             float timeScore, float moveScore, float frameTime, bool isCoop, IntPtr victoryIncrement, IntPtr victoryNextBlock, string levelJsonPath)
         {
             int levelCount = MazeLevels.LoadLevelJson(levelJsonPath).Length;
@@ -101,9 +101,9 @@ namespace CSMaze
             }
             if (timeOnScreen >= 5.5)
             {
-                IntPtr bestTimeScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Best Time Score: {highscores[currentLevel].Item1:F1}", DarkRed.ToSDL(false));
+                IntPtr bestTimeScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Best Time Score: {highscores[currentLevel].TimeScore:F1}", DarkRed.ToSDL(false));
                 IntPtr bestTimeScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestTimeScoreTextSfc);
-                IntPtr bestMoveScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Best Move Score: {highscores[currentLevel].Item2:F1}", DarkRed.ToSDL(false));
+                IntPtr bestMoveScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Best Move Score: {highscores[currentLevel].MoveScore:F1}", DarkRed.ToSDL(false));
                 IntPtr bestMoveScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestMoveScoreTextSfc);
                 _ = DrawTextureAtPosition(screen, bestTimeScoreText, new Point(10, 90));
                 _ = DrawTextureAtPosition(screen, bestMoveScoreText, new Point(10, 120));
@@ -119,9 +119,9 @@ namespace CSMaze
             }
             if (timeOnScreen >= 6.5)
             {
-                IntPtr bestTotalTimeScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Best Game Time Score: {highscores.Sum(x => x.Item1):F1}", DarkRed.ToSDL(false));
+                IntPtr bestTotalTimeScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Best Game Time Score: {highscores.Sum(x => x.TimeScore):F1}", DarkRed.ToSDL(false));
                 IntPtr bestTotalTimeScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestTotalTimeScoreTextSfc);
-                IntPtr bestTotalMoveScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Best Game Move Score: {highscores.Sum(x => x.Item2):F1}", DarkRed.ToSDL(false));
+                IntPtr bestTotalMoveScoreTextSfc = SDL_ttf.TTF_RenderUTF8_Blended(font, $"Best Game Move Score: {highscores.Sum(x => x.MoveScore):F1}", DarkRed.ToSDL(false));
                 IntPtr bestTotalMoveScoreText = SDL.SDL_CreateTextureFromSurface(screen, bestTotalMoveScoreTextSfc);
                 _ = DrawTextureAtPosition(screen, bestTotalTimeScoreText, new Point(10, 200));
                 _ = DrawTextureAtPosition(screen, bestTotalMoveScoreText, new Point(10, 230));
