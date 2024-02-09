@@ -572,37 +572,32 @@ namespace CSMaze
                     float moveSpeedMod = Math.Min(1, frameTime * cfg.MoveSpeed * moveMultiplier);
                     // A set of events that occurred due to player movement
                     HashSet<MoveEvent> events = new();
-                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_W) || IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_UP))
+                    if (!levels[currentLevel].Won && !levels[currentLevel].Killed)
                     {
-                        if (!levels[currentLevel].Won && !levels[currentLevel].Killed)
+                        Vector2 movementVector = new();
+                        if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_W) || IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_UP))
                         {
-                            events.UnionWith(levels[currentLevel].MovePlayer(facingDirections[currentLevel] * moveSpeedMod, hasGun[currentLevel], true, cfg.EnableCollision));
-                            hasStartedLevel[currentLevel] = true;
+                            movementVector += Vector2.UnitX;
                         }
-                    }
-                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_S) || IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_DOWN))
-                    {
-                        if (!levels[currentLevel].Won && !levels[currentLevel].Killed)
+                        if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_S) || IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_DOWN))
                         {
-                            events.UnionWith(levels[currentLevel].MovePlayer(-facingDirections[currentLevel] * moveSpeedMod, hasGun[currentLevel], true, cfg.EnableCollision));
-                            hasStartedLevel[currentLevel] = true;
+                            movementVector -= Vector2.UnitX;
                         }
-                    }
-                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_A))
-                    {
-                        if (!levels[currentLevel].Won && !levels[currentLevel].Killed)
+                        if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_A))
                         {
-                            events.UnionWith(levels[currentLevel].MovePlayer(new Vector2(facingDirections[currentLevel].Y * moveSpeedMod, -facingDirections[currentLevel].X * moveSpeedMod),
-                                hasGun[currentLevel], true, cfg.EnableCollision));
-                            hasStartedLevel[currentLevel] = true;
+                            movementVector -= Vector2.UnitY;
                         }
-                    }
-                    if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_D))
-                    {
-                        if (!levels[currentLevel].Won && !levels[currentLevel].Killed)
+                        if (IsKeyPressed(SDL.SDL_Scancode.SDL_SCANCODE_D))
                         {
-                            events.UnionWith(levels[currentLevel].MovePlayer(new Vector2(-facingDirections[currentLevel].Y * moveSpeedMod, facingDirections[currentLevel].X * moveSpeedMod),
-                                hasGun[currentLevel], true, cfg.EnableCollision));
+                            movementVector += Vector2.UnitY;
+                        }
+                        movementVector = Vector2.Normalize(movementVector);
+                        float facingAngle = (float)Math.Atan2(facingDirections[currentLevel].Y, facingDirections[currentLevel].X);
+                        movementVector = Vector2.Transform(movementVector, Matrix3x2.CreateRotation(facingAngle));
+                        movementVector *= moveSpeedMod;
+                        if (movementVector.LengthSquared() > 0)
+                        {
+                            events.UnionWith(levels[currentLevel].MovePlayer(movementVector, hasGun[currentLevel], true, cfg.EnableCollision));
                             hasStartedLevel[currentLevel] = true;
                         }
                     }
