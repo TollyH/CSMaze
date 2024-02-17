@@ -77,7 +77,7 @@ namespace CSMaze
         /// </summary>
         public static (WallCollision?, SpriteCollision[]) GetFirstCollision(Level currentLevel, Vector2 direction, bool edgeIsWall, IReadOnlyList<NetData.Player> players)
         {
-            // When traversing one unit in a direction, what will the coordinate of the other direction increase by?
+            // When traversing one unit in a direction, what will the length of the dimension's ray increase by?
             Vector2 stepSize = new(Math.Abs(1 / direction.X), Math.Abs(1 / direction.Y));
             Point currentTile = currentLevel.PlayerCoords.Floor();
             // The current length of the X and Y rays respectively
@@ -123,7 +123,8 @@ namespace CSMaze
             bool firstCheck = true;
             while (!tileFound)
             {
-                // Move along ray, unless this is the first check in which case we want to check our current square.
+                // Move along whichever dimension's ray is shorter to enter the next intersected grid tile,
+                // unless this is the first check in which case we want to check our current square.
                 if (!firstCheck)
                 {
                     if (dimensionRayLength.X < dimensionRayLength.Y)
